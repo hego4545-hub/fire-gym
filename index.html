@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fire Gym | Premium</title>
+    <title>Fire Gym | Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
@@ -12,148 +12,104 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: var(--bg); color: var(--text); padding-bottom: 100px; }
 
-        /* Welcome Section */
         header { padding: 40px 20px; text-align: center; }
-        header h1 { font-size: 28px; font-weight: 900; }
+        header h1 { font-size: 26px; font-weight: 900; }
         header span { color: var(--accent); }
 
-        /* Grid Cards */
-        .section-title { padding: 0 20px; margin-bottom: 15px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .section-title { padding: 20px 20px 10px; font-size: 18px; font-weight: bold; }
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
-        .action-card { background: var(--card-bg); padding: 25px 15px; border-radius: 15px; text-align: center; border: 1px solid #333; transition: 0.3s; }
-        .action-card:active { transform: scale(0.95); background: #252525; }
-        .action-card i { display: block; font-size: 30px; margin-bottom: 10px; }
-        .action-card p { font-size: 14px; font-weight: bold; }
+        .action-card { background: var(--card-bg); padding: 25px 15px; border-radius: 20px; text-align: center; border: 1px solid #333; }
+        .action-card i { display: block; font-size: 30px; margin-bottom: 5px; }
 
-        /* Water Section */
+        .schedule-card { background: #1c1c1c; margin: 15px 20px; padding: 20px; border-radius: 20px; border: 1px solid #333; }
         .water-section { margin: 25px 20px; background: #0d47a1; border-radius: 20px; overflow: hidden; }
-        .water-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .water-body { background: var(--card-bg); padding: 30px; text-align: center; }
-        .water-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 20px; border-radius: 10px; margin-top: 15px; width: 100%; font-weight: 900; }
+        .water-body { background: var(--card-bg); padding: 25px; text-align: center; }
 
-        /* Tabs */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 15px 0 30px; border-top: 1px solid #222; }
-        .nav-item { color: #666; text-decoration: none; text-align: center; font-size: 12px; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 15px 0 30px; border-top: 1px solid #222; z-index: 100; }
+        .nav-item { color: #555; text-decoration: none; text-align: center; font-size: 12px; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
+
+        .page { display: none; }
+        .page.active { display: block; }
         
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 25px; width: 100%; text-align: center; }
-        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: #fff; text-align: center; }
-        
-        /* Auth Screen */
-        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; z-index: 2000; position: fixed; width: 100%; top: 0; }
+        iframe { width: 100%; border-radius: 15px; margin-bottom: 15px; border: 1px solid #333; }
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; position: fixed; width: 100%; top: 0; z-index: 2000; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: #fff; font-weight: 900; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- Login -->
     <div id="login-screen">
         <div style="text-align: center; width: 100%; padding: 30px;">
             <h1 style="color: var(--primary); font-size: 45px; margin-bottom: 10px;">FIRE GYM</h1>
-            <p style="color: #666; margin-bottom: 30px;">سجل دخولك يا بطل 🔥</p>
             <input type="tel" id="user-phone" placeholder="رقم موبايلك">
-            <button onclick="doLogin()" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: #fff; font-weight: 900; margin-top: 10px;">دخول للأرض 🔥</button>
+            <button onclick="doLogin()" class="btn">دخول للأرض 🔥</button>
         </div>
     </div>
 
-    <div id="main-app" style="display: none;">
-        <header>
-            <h1>يا مرحب بـ <span>بطلنا</span> 👋</h1>
-        </header>
-
-        <div class="section-title">📊 أداؤك النهاردة</div>
-        <div class="grid-container">
-            <div class="action-card" onclick="openModal('سجل الوزن')">
-                <i>⚖️</i>
-                <p>سجل الوزن</p>
+    <div id="main-content" style="display: none;">
+        <!-- Page: Home -->
+        <div id="page-home" class="page active">
+            <header><h1>يا مرحب بـ <span>بطلنا</span> 👋</h1></header>
+            <div class="section-title">📊 أداؤك النهاردة</div>
+            <div class="grid-container">
+                <div class="action-card" onclick="alert('سجل الوزن سيتم تفعيله')"><i>⚖️</i><p>سجل الوزن</p></div>
+                <div class="action-card" onclick="alert('سجل الأكل سيتم تفعيله')"><i>🥗</i><p>سجل الأكل</p></div>
             </div>
-            <div class="action-card" onclick="openModal('أحدث صورة')">
-                <i>📸</i>
-                <p>أحدث صورة</p>
+            <div class="schedule-card">
+                <h3 style="margin-bottom: 5px;">جدول تمرينك الحالي 🏋️</h3>
+                <p style="color: #666; font-size: 12px;">سيتم تحديث جدولك بواسطة الكابتن بنهاية الأسبوع.</p>
             </div>
-            <div class="action-card" onclick="openModal('سجل الأكل')">
-                <i>🥗</i>
-                <p>سجل الأكل</p>
-            </div>
-            <div class="action-card" onclick="openModal('سجل الأوزان')">
-                <i>💪</i>
-                <p>سجل الأوزان</p>
+            <div class="water-section">
+                <div style="padding:10px 15px;">💧 متابع المية <span id="w-percent" style="float:left;">0%</span></div>
+                <div class="water-body"><h2 id="w-count" style="font-size: 40px;">0</h2><button onclick="addW()" class="btn" style="background:#222;">+1 كوب</button></div>
             </div>
         </div>
 
-        <div class="water-section">
-            <div class="water-header">
-                <span>💧 متابع المية</span>
-                <span id="w-percent">0%</span>
-            </div>
-            <div class="water-body">
-                <h2 id="w-count" style="font-size: 40px;">0</h2>
-                <p style="color: #888; font-size: 12px;">أكواب مياه اليوم</p>
-                <button class="water-btn" onclick="addWater()">+1 كوب</button>
+        <!-- Page: Technique -->
+        <div id="page-tech" class="page">
+            <div class="section-title">🎬 تكنيك التمارين (فيديو)</div>
+            <div style="padding: 20px;">
+                <p style="margin-bottom: 15px; color: var(--accent);">شرح صحيح لأهم الحركات:</p>
+                <iframe height="200" src="https://www.youtube.com/embed/1O72k07a0Gk" title="Squat Guide"></iframe>
+                <iframe height="200" src="https://www.youtube.com/embed/xS2wK_-m764" title="Push up Guide"></iframe>
             </div>
         </div>
 
         <nav class="bottom-nav">
-            <div class="nav-item active">🏠 حسابي</div>
-            <div class="nav-item">🎓 التكنيك</div>
+            <div class="nav-item active" onclick="showP('home')">🏠 حسابي</div>
+            <div class="nav-item" onclick="showP('tech')">🎓 التكنيك</div>
         </nav>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h3 id="modal-title">سجل بياناتك</h3>
-            <input type="text" id="modal-input" placeholder="اكتب هنا...">
-            <button onclick="saveData()" style="width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: #fff; font-weight: bold;">حفظ ✅</button>
-            <p onclick="closeModal()" style="margin-top: 15px; color: #888; cursor: pointer;">إلغاء</p>
-        </div>
-    </div>
-
     <script>
-        // CONFIG
         const firebaseConfig = { projectId: "fire-gym-9c753" }; 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let user = "";
-        let water = 0;
-        let activeType = "";
+        let u = "";
+        let w = 0;
 
         function doLogin() {
             const p = document.getElementById('user-phone').value;
-            if(p.length < 10) return alert("الرقم غلط!");
-            user = p;
+            if(p.length < 10) return;
+            u = p;
             document.getElementById('login-screen').style.display = "none";
-            document.getElementById('main-app').style.display = "block";
+            document.getElementById('main-content').style.display = "block";
         }
 
-        function openModal(type) {
-            activeType = type;
-            document.getElementById('modal-title').innerText = type;
-            document.getElementById('modal').style.display = "flex";
+        function showP(name) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(name==='home') document.querySelector('.nav-item:first-child').classList.add('active');
+            else document.querySelector('.nav-item:last-child').classList.add('active');
         }
 
-        function closeModal() { document.getElementById('modal').style.display = "none"; }
-
-        async function saveData() {
-            const val = document.getElementById('modal-input').value;
-            if(!val) return;
-            await db.collection('logs').add({
-                phone: user,
-                type: activeType,
-                value: val,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert("نم التميز يا بطل! 🔥");
-            document.getElementById('modal-input').value = "";
-            closeModal();
-        }
-
-        function addWater() {
-            water++;
-            document.getElementById('w-count').innerText = water;
-            document.getElementById('w-percent').innerText = Math.min(water * 10, 100) + "%";
+        function addW() {
+            w++;
+            document.getElementById('w-count').innerText = w;
+            document.getElementById('w-percent').innerText = Math.min(w*10, 100) + "%";
         }
     </script>
 </body>
