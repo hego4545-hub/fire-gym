@@ -11,33 +11,23 @@
         :root { --primary: #ff3d00; --bg: #000; --card: #121212; --text: #fff; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo', sans-serif; }
         body { background:var(--bg); color:var(--text); padding-bottom:100px; -webkit-tap-highlight-color: transparent; }
-        
         .screen { display:none; animation: fadeIn 0.3s ease; min-height:100vh; }
         .screen.active { display:block; }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-        /* Forms */
         .card { background:var(--card); padding:20px; border-radius:20px; border:1px solid #222; margin:15px; }
         input, select { width:100%; padding:15px; border-radius:12px; background:#000; color:#fff; border:1px solid #333; margin:8px 0; }
         .btn { width:100%; padding:18px; border-radius:12px; background:var(--primary); color:#fff; font-weight:900; border:none; cursor:pointer; font-size:16px; box-shadow:0 10px 20px rgba(255,61,0,0.3); }
-
-        /* Tabs */
         .tabs { display:flex; gap:10px; padding:10px 20px; overflow-x:auto; }
         .tab { padding:10px 25px; border-radius:30px; background:#111; color:#555; white-space:nowrap; font-weight:bold; }
         .tab.active { background:var(--primary); color:#fff; }
-
-        /* Navigation */
         nav { position:fixed; bottom:0; width:100%; background:rgba(0,0,0,0.95); display:flex; padding:15px 0 35px; border-top:1px solid #222; z-index:100; }
         .nav-item { flex:1; text-align:center; color:#444; font-size:11px; font-weight:bold; }
         .nav-item.active { color:var(--primary); }
-
-        .correct { color:#4caf50; font-weight:900; } .wrong { color:#f44336; font-weight:900; }
         .member-card { background:var(--card); padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #222; border-right:4px solid #444; }
     </style>
 </head>
 <body>
 
-    <!-- 1. شاشة الدخول -->
     <div id="scr-login" class="screen active" style="padding:60px 20px; text-align:center;">
         <h1 style="color:var(--primary); font-size:55px; font-weight:900;">FIRE <span style="color:#fff;">GYM</span></h1>
         <div class="card">
@@ -47,9 +37,8 @@
         </div>
     </div>
 
-    <!-- 2. شاشة تسجيل البيانات -->
     <div id="scr-reg" class="screen" style="padding:20px;">
-        <h2 style="margin-bottom:15px;">انضم لجيش النار 🦁</h2>
+        <h2>انضم لجيش النار 🦁</h2>
         <div class="card">
             <input type="text" id="r-name" placeholder="الاسم بالكامل">
             <input type="tel" id="r-phone" placeholder="رقم الموبايل">
@@ -61,7 +50,6 @@
         </div>
     </div>
 
-    <!-- 3. شاشة حساب البطل (المشترك) -->
     <div id="scr-user" class="screen">
         <header style="padding:40px 20px;"><h2>بطل فاير: <span id="u-name" style="color:var(--primary);">...</span> 👋</h2></header>
         <div class="tabs">
@@ -75,27 +63,24 @@
         </div>
         <div id="t-m" class="card" style="display:none;"><h3>تطورك الشهري 📊</h3><p>قريباً..</p></div>
         <div id="t-y" class="card" style="display:none;"><h3>حلم السنة 🏆</h3><p>قريباً..</p></div>
-        
         <div class="card" style="background: linear-gradient(135deg, #0d47a1, #1565c0);">
-            💧 متابع المياه <h1 id="u-wc" style="font-size:50px;">0</h1>
+            💧 متابع المياه <h1 id="u-wc">0</h1>
             <button class="btn" style="background:#fff; color:#0d47a1; margin-top:15px;" onclick="addW()">+1 كـــوب</button>
         </div>
     </div>
 
-    <!-- 4. شاشة التكنيك المتقدم -->
     <div id="scr-tech" class="screen">
         <header style="padding:20px;"><h2>أسرار التكنيك 🎓</h2></header>
         <div class="tabs">
             <div class="tab active">صدر</div><div class="tab">ظهر</div><div class="tab">أرجل</div><div class="tab">ذراع</div>
         </div>
         <div class="card">
-            <p class="correct" style="margin-bottom:5px;">✅ الصح: كوعك بزاوية 45 درجة</p>
-            <p class="wrong">❌ الغلط: فتح الكوع للخارج تماماً</p>
+            <p style="color:#4caf50; font-weight:900;">✅ الصح: كوعك بزاوية 45 درجة</p>
+            <p style="color:#f44336; font-weight:900;">❌ الغلط: فتح الكوع للخارج</p>
             <iframe width="100%" height="210" src="https://www.youtube.com/embed/1O72k07a0Gk" frameborder="0" style="border-radius:20px; margin-top:15px;"></iframe>
         </div>
     </div>
 
-    <!-- 5. لوحة شاشة الكابتن (الأدمن) -->
     <div id="scr-coach" class="screen" style="padding:20px;">
         <h1 style="color:var(--primary); margin-bottom:20px;">لوحة القائد 🦁</h1>
         <div id="coach-list">جارِ تحميل الأبطال...</div>
@@ -107,7 +92,6 @@
     </nav>
 
     <script>
-        // الكود اللي إنت جبته - الـ CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAxMNBdKNk_brPMlq103_HPRWOIqj-lb24",
             authDomain: "fire-gym-9c753.firebaseapp.com",
@@ -134,7 +118,7 @@
             if(p === coachPhone) return showScreen('scr-coach'), loadCoach();
             try {
                 const doc = await db.collection('users').doc(p).get();
-                if(!doc.exists()) return alert("الرقم ده مش متسجل!");
+                if(!doc.exists) return alert("الرقم ده مش متسجل!");
                 const u = doc.data();
                 if(u.status === 'pending') return alert("طلبك قيد المراجعة يا بطل!");
                 document.getElementById('u-name').innerText = u.name;
@@ -147,12 +131,9 @@
             const n = document.getElementById('r-name').value;
             if(!p || !n) return alert("املا البيانات!");
             await db.collection('users').doc(p).set({
-                name: n, phone: p, age: document.getElementById('r-age').value,
-                height: document.getElementById('r-height').value,
-                weight: document.getElementById('r-weight').value,
-                program: document.getElementById('r-prog').value,
+                name: n, phone: p, age: document.getElementById('reg-age')?.value || 0,
                 status: 'pending', timestamp: new Date()
-            });
+            }, {merge: true});
             alert("تم الإرسال! كلم الكابتن يوافق عليك.");
             showScreen('scr-login');
         }
@@ -164,7 +145,6 @@
                     const u = doc.data();
                     h += `<div class="member-card" style="border-right-color:${u.status==='pending'?'#ff3d00':'#4caf50'}">
                         <b>${u.name}</b> (${u.phone})<br>
-                        <small>البرنامج: ${u.program} | الوزن: ${u.weight}</small><br>
                         ${u.status==='pending' ? `<button class="btn" style="padding:5px; margin-top:10px;" onclick="approve('${u.phone}')">موافقة ✅</button>` : '<span style="color:#4caf50">بطل مفعل ✅</span>'}
                     </div>`;
                 });
