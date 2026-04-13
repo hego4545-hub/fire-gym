@@ -134,7 +134,7 @@
 
     <!-- Authentication Screen -->
     <div id="auth-screen">
-        <div class="auth-card">
+        <div class="auth-card" id="login-form">
             <h2>FIRE GYM</h2>
             <p style="color: var(--text-muted);">المنصة الذكية للأبطال 🦁</p>
             <div class="input-group">
@@ -142,7 +142,35 @@
                 <input type="tel" id="login-phone" placeholder="01xxxxxxxxx">
             </div>
             <button class="btn-full" onclick="login()">دخول للأرض 🔥</button>
-            <p style="margin-top: 20px; font-size: 12px; color: var(--text-muted);">خاص بمشتركين كابتن أحمد هجرس فقط</p>
+            <p style="margin-top: 15px; font-size: 14px;">
+                <a href="javascript:void(0)" onclick="toggleAuth('register')" style="color: var(--accent); text-decoration: none;">سجل كبطل جديد معانا 💪</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 11px; color: var(--text-muted);">خاص بمشتركين كابتن أحمد هجرس فقط</p>
+        </div>
+
+        <div class="auth-card hidden" id="register-form">
+            <h2>بطل جديد 🔥</h2>
+            <p style="color: var(--text-muted);">املأ بياناتك وانضم لجيش الـ Fire</p>
+            <div class="input-group">
+                <label>الاسم بالكامل</label>
+                <input type="text" id="reg-name" placeholder="اكتب اسمك هنا">
+            </div>
+            <div class="input-group">
+                <label>رقم الموبايل (واتساب)</label>
+                <input type="tel" id="reg-phone" placeholder="01xxxxxxxxx">
+            </div>
+            <div class="input-group">
+                <label>هدفك إيه؟</label>
+                <select id="reg-goal" style="width:100%; padding:15px; border-radius:12px; background:#121212; color:#fff; border:1px solid #333;">
+                    <option value="تخسيس">تخسيس ونحت</option>
+                    <option value="تضخيم">تضخيم وبناء عضلات</option>
+                    <option value="فتنس">لياقة بدنية (فتنس)</option>
+                </select>
+            </div>
+            <button class="btn-full" onclick="register()">إرسال طلب الانضمام 🚀</button>
+            <p style="margin-top: 15px; font-size: 14px;">
+                <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color: var(--text-muted); text-decoration: none;">أنا مشترك بالفعل (تسجيل دخول)</a>
+            </p>
         </div>
     </div>
 
@@ -204,10 +232,17 @@
 
             <!-- Admin Tab -->
             <div id="admin-tab" class="content-tab hidden">
+                <div class="card" style="border-color: var(--accent);">
+                    <h3>طلبات انضمام جديدة 🆕</h3>
+                    <div id="pending-users-list" style="margin-top:15px;">
+                        <p style="color: var(--text-muted);">جاري التحقق من الطلبات...</p>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <h3>المشتركين النشطين (خاص بالكابتن) 👑</h3>
+                    <h3>أحدث نشاط الأبطال 🏃‍♂️</h3>
                     <div id="users-list" style="margin-top: 15px;">
-                        <p style="color: var(--text-muted);">لا يوجد مشتركين مسجلين حالياً.</p>
+                        <p style="color: var(--text-muted);">لا يوجد سجلات حالياً.</p>
                     </div>
                 </div>
             </div>
@@ -264,6 +299,9 @@
         let waterCount = 0;
         const ADMIN_PHONE = "01100896637";
 
+        // Global check for updates to admin view
+        let adminInterval;
+
         // Restore Session & Water
         window.addEventListener('load', () => {
             const savedPhone = localStorage.getItem('fire_gym_phone');
@@ -280,6 +318,7 @@
             } else {
                 localStorage.setItem('water_date', today);
                 localStorage.setItem('water_count', "0");
+                localStorage.setItem('water_count_val', "0");
             }
 
             // Register SW
@@ -288,45 +327,129 @@
             }
         });
 
+        function toggleAuth(mode) {
+            if (mode === 'register') {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+            } else {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const goal = document.getElementById('reg-goal').value;
+            const btn = document.querySelector('#register-form .btn-full');
+
+            if (!name || phone.length < 10) {
+                alert('كمل بياناتك يا بطل عشان الكابتن يشوفك!');
+                return;
+            }
+
+            btn.classList.add('loading');
+            btn.innerText = "جاري إرسال طلبك...";
+
+            try {
+                // Check if already exists
+                const userDoc = await db.collection('users').doc(phone).get();
+                if (userDoc.exists) {
+                    alert('الرقم ده مسجل عندنا فعلاً! جرب تسجل دخول.');
+                    toggleAuth('login');
+                    return;
+                }
+
+                await db.collection('users').doc(phone).set({
+                    name: name,
+                    phone: phone,
+                    goal: goal,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert('طلبك وصل للكابتن يا بطل! استنى مكالمة أو رسالة تفعيل الحساب 💪🔥');
+                toggleAuth('login');
+                document.getElementById('login-phone').value = phone;
+            } catch(e) {
+                console.error(e);
+                alert('حصل مشكلة في الشبكة، جرب تاني');
+            } finally {
+                btn.classList.remove('loading');
+                btn.innerText = "إرسال طلب الانضمام 🚀";
+            }
+        }
+
         async function login(isSilent = false) {
-            const btn = document.querySelector('#auth-screen .btn-full');
+            const btn = document.querySelector('#login-form .btn-full');
             const phoneField = document.getElementById('login-phone');
-            const phone = phoneField.value;
+            const phone = phoneField.value.trim();
 
             if (phone.length < 10) {
                 if(!isSilent) alert('برجاء إدخال رقم موبايل صحيح');
                 return;
             }
 
-            btn.classList.add('loading');
-            btn.innerText = "جاري الدخول...";
+            if(!isSilent) {
+                btn.classList.add('loading');
+                btn.innerText = "جاري التحقق...";
+            }
 
             try {
-                // Ensure Firebase Auth session
-                if (!firebase.auth().currentUser) {
-                    await firebase.auth().signInAnonymously();
+                // Admin bypass
+                if (phone === ADMIN_PHONE) {
+                    enterApp({ phone: phone, name: "كابتن أحمد", role: 'admin' });
+                    return;
                 }
 
-                // Persistent Session
-                localStorage.setItem('fire_gym_phone', phone);
-                currentUser = { phone: phone, name: "بطل فاير" };
+                // Check DB for user status
+                const userDoc = await db.collection('users').doc(phone).get();
                 
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-content').style.display = 'block';
-                
-                if (phone === ADMIN_PHONE) {
-                    document.getElementById('admin-nav').classList.remove('hidden');
-                    document.getElementById('coach-hint').classList.remove('hidden');
-                    document.getElementById('user-display-name').innerText = "كابتن أحمد";
-                    loadAllLogs();
-                } else {
-                    document.getElementById('user-display-name').innerText = "بطلنا " + phone.substring(phone.length - 4);
+                if (!userDoc.exists) {
+                    if(!isSilent) alert('الرقم ده مش مسجل.. سجل حساب جديد الأول يا بطل!');
+                    return;
                 }
+
+                const userData = userDoc.data();
+                if (userData.status === 'pending') {
+                    if(!isSilent) alert('حسابك لسه تحت المراجعة من الكابتن.. الصبر يا بطل 💪');
+                    return;
+                }
+
+                if (userData.status === 'rejected') {
+                    if(!isSilent) alert('عذراً، لا يمكن الدخول حالياً. تواصل مع الكابتن.');
+                    return;
+                }
+
+                enterApp({ phone: phone, name: userData.name, role: 'user' });
+
             } catch(e) {
                 console.error(e);
             } finally {
-                btn.classList.remove('loading');
-                btn.innerText = "دخول للأرض 🔥";
+                if(!isSilent) {
+                    btn.classList.remove('loading');
+                    btn.innerText = "دخول للأرض 🔥";
+                }
+            }
+        }
+
+        async function enterApp(user) {
+            currentUser = user;
+            localStorage.setItem('fire_gym_phone', user.phone);
+            
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            
+            if (user.role === 'admin') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+                document.getElementById('coach-hint').classList.remove('hidden');
+                document.getElementById('user-display-name').innerText = "كابتن أحمد";
+                loadAdminData();
+                adminInterval = setInterval(loadAdminData, 30000); // refresh every 30s
+            } else {
+                document.getElementById('user-display-name').innerText = "يا وحش " + (user.name.split(' ')[0] || "بطلنا");
+                // Reset other tabs for non-admin
+                document.getElementById('admin-nav').classList.add('hidden');
             }
         }
 
@@ -335,14 +458,14 @@
             document.getElementById('water-count').innerText = waterCount;
             localStorage.setItem('water_count', waterCount);
             
-            // Optional: Sync water to firebase quietly
             if(currentUser) {
                 db.collection('logs').add({
+                    userName: currentUser.name,
                     userPhone: currentUser.phone,
                     type: "شرب مياه",
                     value: waterCount + " كوب",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(console.error);
+                });
             }
         }
 
@@ -350,6 +473,14 @@
             document.getElementById('logger-title').innerText = "تسجيل " + type;
             document.getElementById('log-value').value = "";
             document.getElementById('log-note').value = "";
+            
+            // Contextual placeholder
+            if(type === 'وزن') {
+                document.getElementById('log-value').placeholder = "مثال: 85.5 كجم";
+            } else if(type === 'وجبة') {
+                document.getElementById('log-value').placeholder = "أكلت إيه النهاردة؟";
+            }
+            
             document.getElementById('logger-ui').classList.remove('hidden');
         }
 
@@ -360,13 +491,13 @@
             const type = document.getElementById('logger-title').innerText;
 
             if (!val) { alert('اكتب البيانات الأول يا بطل!'); return; }
-            if (!currentUser) { alert('برجاء تسجيل الدخول أولاً'); return; }
 
             btn.classList.add('loading');
             btn.innerText = "جاري الحفظ...";
 
             try {
                 await db.collection('logs').add({
+                    userName: currentUser.name,
                     userPhone: currentUser.phone,
                     type: type,
                     value: val,
@@ -376,8 +507,7 @@
                 alert('عاش! البيانات وصلت للكابتن بنجاح 💪🔥');
                 closeLogger();
             } catch (e) {
-                console.error(e);
-                alert('في مشكلة بسيطة في الشبكة.. جرب تاني كمان شوية');
+                alert('مشكلة في الشبكة.. جرب تاني');
             } finally {
                 btn.classList.remove('loading');
                 btn.innerText = "حفظ للأبد ✅";
@@ -395,28 +525,74 @@
             el.classList.add('active');
         }
 
-        // Admin Function to view everyone
+        // --- ADMIN FUNCTIONS ---
+
+        async function loadAdminData() {
+            loadPendingUsers();
+            loadAllLogs();
+        }
+
+        async function loadPendingUsers() {
+            const list = document.getElementById('pending-users-list');
+            try {
+                const snapshot = await db.collection('users').where('status', '==', 'pending').get();
+                if (snapshot.empty) {
+                    list.innerHTML = '<p style="color: var(--text-muted); font-size:14px;">مفيش طلبات انضمام جديدة دلوقتي.</p>';
+                    return;
+                }
+
+                let html = "";
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    html += `
+                        <div style="background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent);">
+                            <div style="font-weight: bold; color: #fff;">${u.name}</div>
+                            <div style="font-size: 13px; color: var(--text-muted);">${u.phone} - هدفه: ${u.goal}</div>
+                            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                <button onclick="approveUser('${u.phone}', 'approved')" style="flex:1; padding:8px; background:var(--success); border:none; border-radius:8px; color:#fff; font-weight:bold;">موافقة ✅</button>
+                                <button onclick="approveUser('${u.phone}', 'rejected')" style="flex:1; padding:8px; background:#444; border:none; border-radius:8px; color:#fff;">رفض</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch(e) { console.error(e); }
+        }
+
+        async function approveUser(phone, status) {
+            if(!confirm(`هل أنت متأكد من ${status === 'approved' ? 'قبول' : 'رفض'} هذا البطل؟`)) return;
+            try {
+                await db.collection('users').doc(phone).update({ status: status });
+                loadAdminData();
+            } catch(e) { console.error(e); }
+        }
+
         async function loadAllLogs() {
             const list = document.getElementById('users-list');
-            const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').limit(20).get();
-            
-            if (snapshot.empty) {
-                list.innerHTML = '<p style="color: var(--text-muted);">لسه مفيش حد سجل النهاردة..</p>';
-                return;
-            }
+            try {
+                const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').limit(20).get();
+                if (snapshot.empty) {
+                    list.innerHTML = '<p style="color: var(--text-muted);">لسه مفيش جديد النهاردة..</p>';
+                    return;
+                }
 
-            let html = "";
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                html += `
-                    <div style="background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 14px;">
-                        <span style="color: var(--accent); font-weight: bold;">${data.userPhone}</span> سجل <span style="color: var(--primary);">${data.type}</span>: 
-                        <b>${data.value}</b> <br>
-                        <small style="color: #666;">${data.note || ''}</small>
-                    </div>
-                `;
-            });
-            list.innerHTML = html;
+                let html = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : '';
+                    html += `
+                        <div style="background: #1a1a1a; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; border-right: 3px solid var(--primary);">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="color: var(--accent); font-weight: bold;">${data.userName || data.userPhone}</span>
+                                <small style="color: #555;">${date}</small>
+                            </div>
+                            <div style="color: #fff;">سجل <span style="color: var(--primary); font-weight:bold;">${data.type}</span>: <b>${data.value}</b></div>
+                            ${data.note ? `<div style="font-size: 12px; color: #888; margin-top:5px; background:#222; padding:5px; border-radius:5px;">${data.note}</div>` : ''}
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch(e) { console.error(e); }
         }
     </script>
 </body>
