@@ -16,36 +16,35 @@
             --primary: #e53935; --primary-dark: #b71c1c; --bg: #121212; --surface: #1e1e1e;
             --text: #ffffff; --text-muted: #aaaaaa; --accent: #ffb300; --success: #4caf50;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Cairo', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; }
 
         /* Auth Screen */
-        #auth-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: linear-gradient(rgba(18,18,18,0.8), var(--bg)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80') center/cover; }
-        .auth-card { background: var(--surface); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(229, 57, 53, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        .auth-card h2 { font-weight: 900; color: var(--primary); margin-bottom: 10px; font-size: 32px; }
+        #auth-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: linear-gradient(rgba(18,18,18,0.8), var(--bg)), url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80') center/cover; }
+        .auth-card { background: var(--surface); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(229, 57, 53, 0.3); }
+        .auth-card h2 { font-weight: 900; color: var(--primary); margin-bottom: 20px; font-size: 32px; }
         .input-group { margin: 25px 0; text-align: right; }
-        .input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); }
-        .input-group input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333; background: #121212; color: #fff; font-size: 18px; text-align: center; outline: none; }
-        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; background: linear-gradient(45deg, var(--primary), var(--primary-dark)); color: #fff; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(229, 57, 53, 0.4); }
+        .input-group input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333; background: #121212; color: #fff; text-align: center; font-size: 18px; outline: none; }
+        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; background: linear-gradient(45deg, var(--primary), var(--primary-dark)); color: #fff; font-size: 18px; font-weight: 900; cursor: pointer; }
 
         /* Dashboard */
         #app-content { display: none; padding-bottom: 100px; }
         header { padding: 40px 20px 80px; text-align: center; background: var(--surface); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
-        .user-welcome { font-size: 24px; font-weight: 900; }
-        .user-welcome span { color: var(--accent); }
         .main-sections { padding: 0 20px; margin-top: -40px; }
         .card { background: var(--surface); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #333; }
         .tracker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .track-btn { background: #222; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #444; }
         .track-btn span { display: block; font-size: 24px; }
-        .coach-badge { background: var(--accent); color: #000; padding: 2px 10px; border-radius: 5px; font-size: 12px; font-weight: 900; }
-
+        
         .bottom-tabs { position: fixed; bottom: 0; width: 100%; background: rgba(30, 30, 30, 0.98); display: flex; justify-content: space-around; padding: 15px 0 30px; border-top: 1px solid #333; }
         .tab { color: var(--text-muted); font-size: 12px; text-align: center; text-decoration: none; }
         .tab i { font-size: 20px; display: block; font-style: normal; }
         .tab.active { color: var(--primary); }
         .hidden { display: none; }
+
+        /* Logger Overlay */
+        #logger-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .log-form input, .log-form textarea { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #444; background: #111; color: #fff; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -54,8 +53,7 @@
         <div class="auth-card">
             <h2>FIRE GYM</h2>
             <div class="input-group">
-                <label>رقم الموبايل</label>
-                <input type="tel" id="login-phone" placeholder="01xxxxxxxxx">
+                <input type="tel" id="login-phone" placeholder="أدخل رقم الموبايل">
             </div>
             <button class="btn-full" onclick="login()">دخول للأرض 🔥</button>
         </div>
@@ -63,13 +61,5 @@
 
     <div id="app-content">
         <header>
-            <div class="user-welcome">بطلنا <span id="user-display-name">بطل</span> 👋</div>
-            <p id="coach-hint" class="hidden"><span class="coach-badge">أدمن</span> الكابتن أحمد</p>
-        </header>
+            <div
 
-        <div class="main-sections">
-            <div class="card" style="background: linear-gradient(135deg, #1e1e1e, #0d47a1);">
-                <h3>متابع المية 💧</h3>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px;">
-                    <span id="water-count" style="font-size: 32px; font-weight: 900;">0</span>
-                    <button
