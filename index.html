@@ -2,28 +2,98 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fire Gym Final</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Fire Gym | PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #111; color: white; font-family: 'Cairo', sans-serif; text-align: center; padding: 50px 20px; }
-        .card { background: #1c1c1c; padding: 30px; border-radius: 20px; border: 1px solid #e53935; margin-top: 20px; }
-        h1 { color: #e53935; font-size: 35px; }
+        :root { --primary: #ff3d00; --bg: #0a0a0a; --card: #141414; --text: #ffffff; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo', sans-serif; }
+        body { background:var(--bg); color:var(--text); padding-bottom:100px; -webkit-tap-highlight-color: transparent; }
+
+        header { padding:50px 20px 30px; background: linear-gradient(180deg, #1a0000 0%, var(--bg) 100%); text-align:center; }
+        header h1 { font-size:32px; font-weight:900; letter-spacing:1px; }
+        header span { color:var(--primary); text-shadow: 0 0 15px rgba(255,61,0,0.4); }
+
+        .section-title { padding:20px; font-size:18px; font-weight:bold; color:#888; display:flex; align-items:center; gap:10px; }
+        
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; padding:0 20px; }
+        .stat-card { background:var(--card); padding:25px 15px; border-radius:24px; text-align:center; border:1px solid #222; transition:0.3s; }
+        .stat-card:active { transform:scale(0.95); background:#1a1a1a; }
+        .stat-card i { display:block; font-size:35px; margin-bottom:10px; }
+        .stat-card p { font-size:14px; font-weight:bold; }
+
+        .big-card { background:var(--card); margin:20px; padding:25px; border-radius:30px; border:1px solid #222; position:relative; overflow:hidden; }
+        .big-card::after { content:''; position:absolute; top:0; right:0; width:5px; height:100%; background:var(--primary); }
+        
+        .water-box { margin:20px; background:linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); border-radius:30px; padding:30px; text-align:center; box-shadow:0 15px 35px rgba(13,71,161,0.3); }
+        .water-btn { background:#fff; color:#0d47a1; border:none; padding:15px 30px; border-radius:15px; font-weight:900; margin-top:20px; width:100%; font-size:18px; }
+
+        nav { position:fixed; bottom:0; width:100%; background:rgba(10,10,10,0.95); backdrop-filter:blur(10px); display:flex; padding:15px 0 35px; border-top:1px solid #222; z-index:100; }
+        .nav-item { flex:1; text-align:center; color:#444; text-decoration:none; font-size:12px; font-weight:bold; }
+        .nav-item.active { color:var(--primary); }
+        
+        .page { display:none; animation: fadeIn 0.4s ease; }
+        .page.active { display:block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
-    <h1>FIRE GYM PRO 🦁</h1>
-    <p>تم التحديث بنجاح!</p>
 
-    <div class="card">
-        <h3>جدول تمارينك 🏋️</h3>
-        <p style="color: #888; margin-top: 10px;">سيتم رفع الجدول هنا خلال ساعات.</p>
+    <div id="p-home" class="page active">
+        <header>
+            <h1>FIRE <span>GYM</span> PRO 🦁</h1>
+            <p style="color:#666; font-size:14px; margin-top:5px;">مرحباً بك في طريق القوة</p>
+        </header>
+
+        <div class="section-title">⚡ أداؤك اليوم</div>
+        <div class="grid">
+            <div class="stat-card" onclick="alert('سجل الوزن')"><i>⚖️</i><p>سجل الوزن</p></div>
+            <div class="stat-card" onclick="alert('سجل الأكل')"><i>🥗</i><p>سجل الأكل</p></div>
+            <div class="stat-card" onclick="alert('أحدث صورة')"><i>📸</i><p>أحدث صورة</p></div>
+            <div class="stat-card" onclick="alert('الأوزان')"><i>💪</i><p>سجل الأوزان</p></div>
+        </div>
+
+        <div class="big-card">
+            <h3 style="margin-bottom:8px;">جدول تمرينك الحالي 🏋️</h3>
+            <p style="color:#888; font-size:13px; line-height:1.6;">سيد الكابتن سيقوم بتحديث جدولك قريباً. استعد للضخ! 🔥</p>
+        </div>
+
+        <div class="water-box">
+            <p style="font-size:14px; opacity:0.8;">💧 متابع شرب المياه</p>
+            <h1 id="wc" style="font-size:55px; margin:10px 0; font-weight:900;">0</h1>
+            <button class="water-btn" onclick="addW()">+1 كـــوب</button>
+        </div>
     </div>
 
-    <div class="card" style="background: #0d47a1;">
-        <h3>متابع المياه 💧</h3>
-        <h1 id="count">0</h1>
-        <button onclick="document.getElementById('count').innerText++" style="padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer;">+1 كوب</button>
+    <div id="p-tech" class="page">
+        <header><h1>أسرار <span>التكنيك</span> 🎓</h1></header>
+        <div style="padding:20px;">
+            <div style="background:#141414; padding:20px; border-radius:20px; margin-bottom:20px;">
+                <p style="color:var(--primary); font-weight:bold; margin-bottom:15px;">1. تمرين السكوات الصحيح</p>
+                <iframe width="100%" height="200" src="https://www.youtube.com/embed/1O72k07a0Gk" frameborder="0" style="border-radius:15px;"></iframe>
+            </div>
+        </div>
     </div>
+
+    <nav>
+        <div class="nav-item active" onclick="sh('home')">🏠<br>حسابي</div>
+        <div class="nav-item" onclick="sh('tech')">🎓<br>التكنيك</div>
+    </nav>
+
+    <script>
+        function sh(n) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('p-' + n).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            window.scrollTo(0,0);
+        }
+        let w = 0;
+        function addW() {
+            w++;
+            document.getElementById('wc').innerText = w;
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+        }
+    </script>
 </body>
 </html>
