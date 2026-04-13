@@ -3,184 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fire Gym | Coach Master</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>Fire Gym | المنصة الذكية</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <!-- Firebase SDKs - Moved to body for performance -->
+    
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #ff3d00; --bg: #000; --card: #141414; --text: #fff; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo', sans-serif; }
-        body { background:var(--bg); color:var(--text); padding-bottom:100px; }
-        .screen { display:none; animation: fadeIn 0.3s ease; }
-        .screen.active { display:block; }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        :root {
+            --primary: #e53935;
+            --primary-dark: #b71c1c;
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --text: #ffffff;
+            --text-muted: #aaaaaa;
+            --accent: #ffb300;
+            --success: #4caf50;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; }
+
+        /* Auth Screen */
+        #auth-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background: linear-gradient(rgba(18, 18, 18, 0.8), var(--bg)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80') center/cover;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid rgba(229, 57, 53, 0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .auth-card h2 { font-weight: 900; color: var(--primary); margin-bottom: 10px; font-size: 32px; }
+        .input-group { margin: 25px 0; text-align: right; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); }
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #121212;
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+
+        .btn-full {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(229, 57, 53, 0.4);
+        }
+
+        /* Dashboard */
+        #app-content { display: none; padding-bottom: 100px; }
+        header { padding: 40px 20px 80px; text-align: center; background: var(--surface); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .user-welcome { font-size: 24px; font-weight: 900; }
+        .user-welcome span { color: var(--accent); }
+
+        .main-sections { padding: 0 20px; margin-top: -40px; }
+        .card { background: var(--surface); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        .tracker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .track-btn { 
+            background: #222; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #444; 
+            color: #fff; cursor: pointer; transition: transform 0.1s, background-color 0.2s; -webkit-appearance: none; appearance: none;
+        }
+        .track-btn:active { transform: scale(0.95); background: #333; }
+        .track-btn span { display: block; font-size: 24px; margin-bottom: 5px; }
+        .track-btn label { font-size: 14px; font-weight: bold; pointer-events: none; }
+
+        /* Coach Sections */
+        .coach-badge { background: var(--accent); color: #000; padding: 2px 10px; border-radius: 5px; font-size: 12px; font-weight: 900; vertical-align: middle; }
         
-        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; padding:0 20px; }
-        .action-card { background:var(--card); padding:25px 15px; border-radius:24px; text-align:center; border:1px solid #222; }
-        .action-card i { display:block; font-size:35px; margin-bottom:10px; }
+        /* Bottom Tabs */
+        .bottom-tabs { position: fixed; bottom: 0; width: 100%; background: rgba(30, 30, 30, 0.98); display: flex; justify-content: space-around; padding: 15px 0 30px; border-top: 1px solid #333; }
+        .tab { color: var(--text-muted); font-size: 12px; text-align: center; text-decoration: none; display: flex; flex-direction: column; }
+        .tab i { font-size: 20px; margin-bottom: 4px; font-style: normal; }
+        .tab.active { color: var(--primary); }
 
-        .big-card { background:var(--card); margin:20px; padding:25px; border-radius:30px; border:1px solid #222; }
-        input, select, textarea { width:100%; padding:15px; border-radius:12px; background:#000; color:#fff; border:1px solid #333; margin:8px 0; }
-        .btn { width:100%; padding:18px; border-radius:12px; background:var(--primary); color:#fff; font-weight:900; border:none; cursor:pointer; }
-        .nav { position:fixed; bottom:0; width:100%; background:rgba(0,0,0,0.95); display:flex; padding:15px 0 35px; border-top:1px solid #222; }
-        .nav-item { flex:1; text-align:center; color:#444; font-size:11px; font-weight:bold; }
-        .nav-item.active { color:var(--primary); }
+        /* Hidden Sections */
+        .hidden { display: none; }
 
-        .member-card { background:var(--card); padding:20px; border-radius:20px; margin:15px; border:1px solid #222; border-right:5px solid #444; }
-        .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #222; font-size:14px; }
+        /* Form Styling */
+        .log-form { margin-top: 20px; }
+        .log-form input, .log-form textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #444; background: #121212; color: #fff; font-family: inherit; }
+        
+        /* Loading States */
+        .loading { opacity: 0.7; pointer-events: none; position: relative; }
+        .loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 20px;
+            margin-top: -10px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Performance Optimizations */
+        .card, .btn-full { transform: translateZ(0); backface-visibility: hidden; }
     </style>
 </head>
 <body>
 
-    <!-- الدخول -->
-    <div id="scr-login" class="screen active" style="padding:60px 20px; text-align:center;">
-        <h1 style="color:var(--primary); font-size:55px; font-weight:900;">FIRE <span style="color:#fff;">GYM</span></h1>
-        <div class="big-card">
-            <input type="tel" id="login-p" placeholder="رقم الموبايل">
-            <button class="btn" onclick="login()">دخول للأرض 🔥</button>
-            <p style="margin-top:20px; color:#666;" onclick="showScreen('scr-reg')">بطل جديد؟ سجل بياناتك من هنا</p>
+    <!-- Authentication Screen -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2>FIRE GYM</h2>
+            <p style="color: var(--text-muted);">المنصة الذكية للأبطال 🦁</p>
+            <div class="input-group">
+                <label>رقم الموبايل المسجل</label>
+                <input type="tel" id="login-phone" placeholder="01xxxxxxxxx">
+            </div>
+            <button class="btn-full" onclick="login()">دخول للأرض 🔥</button>
+            <p style="margin-top: 20px; font-size: 12px; color: var(--text-muted);">خاص بمشتركين كابتن أحمد هجرس فقط</p>
         </div>
     </div>
 
-    <!-- التسجيل -->
-    <div id="scr-reg" class="screen" style="padding:20px;">
-        <h2>انضم لجيش النار 🦁</h2>
-        <div class="big-card">
-            <input type="text" id="r-name" placeholder="الاسم بالكامل">
-            <input type="tel" id="r-phone" placeholder="رقم الموبايل">
-            <input type="number" id="r-age" placeholder="السن">
-            <input type="number" id="r-height" placeholder="الطول (سم)">
-            <input type="number" id="r-weight" placeholder="الوزن الحالي">
-            <select id="r-prog"><option>تنشيف</option><option>تضخيم</option><option>فتنس</option></select>
-            <button class="btn" onclick="register()">إرسال الطلب 🚀</button>
+    <!-- Main Content -->
+    <div id="app-content">
+        <header>
+            <div style="font-size: 10px; color: var(--primary); text-align: left;">V3.0.1 - FIXED 🛠️</div>
+            <div class="user-welcome">يا مرحب بـ <span id="user-display-name">بطلنا</span> 👋</div>
+            <p id="coach-hint" class="hidden"><span class="coach-badge">أدمن</span> إنت في وضع الكابتن</p>
+        </header>
+
+        <div class="main-sections">
+            <!-- User Dashboard -->
+            <div id="user-tab" class="content-tab">
+                <div class="card">
+                    <h3>أداؤك النهاردة 📈</h3>
+                    <div class="tracker-grid">
+                        <button class="track-btn" onclick="openLogger('وزن')"><span>⚖️</span><label>سجل الوزن</label></button>
+                        <button class="track-btn" onclick="openLogger('صور')"><span>📸</span><label>أحدث صورة</label></button>
+                        <button class="track-btn" onclick="openLogger('وجبة')"><span>🥗</span><label>سجل الأكل</label></button>
+                        <button class="track-btn" onclick="openLogger('تمرين')"><span>💪</span><label>سجل الأوزان</label></button>
+                    </div>
+                </div>
+
+                <!-- Water Tracker -->
+                <div class="card" style="background: linear-gradient(135deg, #1e1e1e, #0d47a1);">
+                    <h3>متابع المية 💧</h3>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px;">
+                        <span id="water-count" style="font-size: 32px; font-weight: 900;">0</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="updateWater(1)" style="background: rgba(255,255,255,0.2); border: none; padding: 10px 20px; border-radius: 10px; color: #fff; font-weight: bold;">+1 كوب</button>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; margin-top: 10px; color: rgba(255,255,255,0.7);">هدفنا النهاردة: 8 أكواب كبار!</p>
+                </div>
+
+                <div class="card">
+                    <h3>جدول تمرينك الحالي 🏋️‍♂️</h3>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">سيتم تحديث جدولك بواسطة الكابتن بنهاية الأسبوع.</p>
+                </div>
+            </div>
+
+            <!-- Library Tab -->
+            <div id="library-tab" class="content-tab hidden">
+                <div class="card">
+                    <h3>تعلم التكنيك الصح ✅</h3>
+                    <div style="margin-top: 15px;">
+                        <div style="background: #222; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                            <span>سكوات (Squat)</span>
+                            <span style="color: var(--success);">شاهد الفيديو</span>
+                        </div>
+                        <div style="background: #222; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                            <span>بنش برس (Bench Press)</span>
+                            <span style="color: var(--success);">شاهد الفيديو</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Tab -->
+            <div id="admin-tab" class="content-tab hidden">
+                <div class="card">
+                    <h3>المشتركين النشطين (خاص بالكابتن) 👑</h3>
+                    <div id="users-list" style="margin-top: 15px;">
+                        <p style="color: var(--text-muted);">لا يوجد مشتركين مسجلين حالياً.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logger Modal (Simple version) -->
+        <div id="logger-ui" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; padding: 40px 20px;">
+            <div class="card" style="max-width: 500px; margin: auto;">
+                <h3 id="logger-title">تسجيل بيانات</h3>
+                <div class="log-form">
+                    <input type="text" id="log-value" placeholder="اكتب البيانات هنا...">
+                    <textarea id="log-note" placeholder="ملاحظات إضافية..."></textarea>
+                    <button class="btn-full" onclick="saveLog()">حفظ للأبد ✅</button>
+                    <button class="btn-full" style="background: #444; margin-top: 10px;" onclick="closeLogger()">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="bottom-tabs">
+            <a href="javascript:void(0)" class="tab active" onclick="switchTab('user', this)"><i>🏠</i><span>حسابي</span></a>
+            <a href="javascript:void(0)" class="tab" onclick="switchTab('library', this)"><i>🎓</i><span>التكنيك</span></a>
+            <a href="javascript:void(0)" id="admin-nav" class="tab hidden" onclick="switchTab('admin', this)"><i>👑</i><span>الأدمن</span></a>
         </div>
     </div>
 
-    <!-- حساب المشترك -->
-    <div id="scr-user" class="screen">
-        <header style="padding:40px 20px;"><h2>بطل فاير: <span id="u-name" style="color:var(--primary);">...</span> 👋</h2></header>
-        <div class="grid">
-            <div class="action-card"><i>⚖️</i><p>سجل الوزن</p></div>
-            <div class="action-card"><i>🥗</i><p>سجل الأكل</p></div>
-            <div class="action-card"><i>📸</i><p>أحدث صورة</p></div>
-            <div class="action-card"><i>💪</i><p>سجل الأوزان</p></div>
-        </div>
-        <div class="big-card">
-            <h3 id="daily-task-title">تمرين اليوم 🏋️</h3>
-            <p id="user-daily-p" style="color:#888; margin-top:10px;">سيظهر هنا جدولك المحدث من الكابتن.</p>
-        </div>
-        <div class="big-card" style="background: linear-gradient(135deg, #0d47a1, #1565c0); border:none;">
-            💧 مياه: <h1 id="u-wc">0</h1>
-            <button class="btn" style="background:#fff; color:#0d47a1; margin-top:10px;" onclick="addW()">+1 كـــوب</button>
-        </div>
-    </div>
-
-    <!-- لوحة الكابتن -->
-    <div id="scr-coach" class="screen">
-        <header style="padding:30px 20px;"><h1>لوحة القائد 🦁</h1></header>
-        <div id="coach-list">جارِ تحميل الأبطال...</div>
-    </div>
-
-    <!-- ملف المشترك المختار (بيظهر للكابتن لما يضغط على اسم) -->
-    <div id="scr-member-detail" class="screen" style="padding:20px;">
-        <button onclick="showScreen('scr-coach')" style="color:var(--primary); background:none; border:none; margin-bottom:20px;">← العودة للقائمة</button>
-        <h2 id="det-name">اسم البطل</h2>
-        <div class="big-card">
-            <div class="detail-row"><span>السن:</span> <b id="det-age">--</b></div>
-            <div class="detail-row"><span>الطول:</span> <b id="det-height">--</b></div>
-            <div class="detail-row"><span>الوزن:</span> <b id="det-weight">--</b></div>
-            <div class="detail-row"><span>البرنامج:</span> <b id="det-prog">--</b></div>
-        </div>
-        <h3>تحديث جدول التمرين 📝</h3>
-        <textarea id="coach-note" rows="5" placeholder="اكتب تمارين اليوم هنا..."></textarea>
-        <button class="btn" onclick="savePlan()">تحديث جدول البطل 💾</button>
-    </div>
-
-    <nav id="b-nav" style="display:none;">
-        <div class="nav-item active" onclick="showScreen('scr-user')">🏠<br>حسابي</div>
-        <div class="nav-item">🎓<br>التكنيك</div>
-    </nav>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
-        const coachPhone = "01100896637";
+        // --- Firebase Config (REAL DATA) ---
         const firebaseConfig = {
-            apiKey: "AIzaSyAxMNBdKNk_brPMlq103_HPRWOIqj-lb24",
+            apiKey: "AIzaSyAxMNBdkNk_brPMlq1O3_HPRWOIqj-lb24",
             authDomain: "fire-gym-9c753.firebaseapp.com",
-            projectId: "fire-gym-9c753"
+            projectId: "fire-gym-9c753",
+            storageBucket: "fire-gym-9c753.firebasestorage.app",
+            messagingSenderId: "417014585133",
+            appId: "1:417014585133:web:38f62686ae2e133298a5a4",
+            measurementId: "G-352VQWNZ6P"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        let selectedMember = "";
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id==='scr-user') document.getElementById('b-nav').style.display='flex';
-            else if(id!=='scr-tech') document.getElementById('b-nav').style.display='none';
+        
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch(e) {
+            console.error("Firebase init failed:", e);
         }
 
-        async function login() {
-            const p = document.getElementById('login-p').value;
-            if(p === coachPhone) return showScreen('scr-coach'), loadCoach();
-            const doc = await db.collection('users').doc(p).get();
-            if(!doc.exists) return alert("الرقم غير مسجل!");
-            const u = doc.data();
-            if(u.status === 'pending') return alert("انتظر تفعيل الكابتن!");
-            document.getElementById('u-name').innerText = u.name;
-            document.getElementById('user-daily-p').innerText = u.daily_plan || "لم يتم تحديد جدول اليوم بعد.";
-            showScreen('scr-user');
+
+        let currentUser = null;
+        let waterCount = 0;
+        const ADMIN_PHONE = "01100896637";
+
+        // Restore Session & Water
+        window.addEventListener('load', () => {
+            const savedPhone = localStorage.getItem('fire_gym_phone');
+            if (savedPhone) {
+                document.getElementById('login-phone').value = savedPhone;
+                login(true); // silent login
+            }
+
+            // Restore Water
+            const today = new Date().toDateString();
+            if (localStorage.getItem('water_date') === today) {
+                waterCount = parseInt(localStorage.getItem('water_count') || "0");
+                document.getElementById('water-count').innerText = waterCount;
+            } else {
+                localStorage.setItem('water_date', today);
+                localStorage.setItem('water_count', "0");
+            }
+
+            // Register SW
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(console.error);
+            }
+        });
+
+        async function login(isSilent = false) {
+            const btn = document.querySelector('#auth-screen .btn-full');
+            const phoneField = document.getElementById('login-phone');
+            const phone = phoneField.value;
+
+            if (phone.length < 10) {
+                if(!isSilent) alert('برجاء إدخال رقم موبايل صحيح');
+                return;
+            }
+
+            btn.classList.add('loading');
+            btn.innerText = "جاري الدخول...";
+
+            try {
+                // Ensure Firebase Auth session
+                if (!firebase.auth().currentUser) {
+                    await firebase.auth().signInAnonymously();
+                }
+
+                // Persistent Session
+                localStorage.setItem('fire_gym_phone', phone);
+                currentUser = { phone: phone, name: "بطل فاير" };
+                
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                
+                if (phone === ADMIN_PHONE) {
+                    document.getElementById('admin-nav').classList.remove('hidden');
+                    document.getElementById('coach-hint').classList.remove('hidden');
+                    document.getElementById('user-display-name').innerText = "كابتن أحمد";
+                    loadAllLogs();
+                } else {
+                    document.getElementById('user-display-name').innerText = "بطلنا " + phone.substring(phone.length - 4);
+                }
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.classList.remove('loading');
+                btn.innerText = "دخول للأرض 🔥";
+            }
         }
 
-        async function register() {
-            const p = document.getElementById('r-phone').value;
-            await db.collection('users').doc(p).set({
-                name: document.getElementById('r-name').value,
-                phone: p, age: document.getElementById('r-age').value,
-                height: document.getElementById('r-height').value,
-                weight: document.getElementById('r-weight').value,
-                program: document.getElementById('r-prog').value,
-                status: 'pending'
-            });
-            alert("تم الإرسال!"); showScreen('scr-login');
+        function updateWater(val) {
+            waterCount += val;
+            document.getElementById('water-count').innerText = waterCount;
+            localStorage.setItem('water_count', waterCount);
+            
+            // Optional: Sync water to firebase quietly
+            if(currentUser) {
+                db.collection('logs').add({
+                    userPhone: currentUser.phone,
+                    type: "شرب مياه",
+                    value: waterCount + " كوب",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(console.error);
+            }
         }
 
-        function loadCoach() {
-            db.collection('users').onSnapshot(snap => {
-                let h = "";
-                snap.forEach(doc => {
-                    const u = doc.data();
-                    h += `<div class="member-card" onclick="viewMember('${u.phone}')" style="border-right-color:${u.status==='pending'?'#ff3d00':'#4caf50'}">
-                        <b>${u.name}</b> (${u.phone})<br>
-                        <small>اضغط لمشاهدة التفاصيل وتعديل الجدول</small>
-                    </div>`;
+        function openLogger(type) {
+            document.getElementById('logger-title').innerText = "تسجيل " + type;
+            document.getElementById('log-value').value = "";
+            document.getElementById('log-note').value = "";
+            document.getElementById('logger-ui').classList.remove('hidden');
+        }
+
+        async function saveLog() {
+            const btn = document.querySelector('#logger-ui .btn-full');
+            const val = document.getElementById('log-value').value;
+            const note = document.getElementById('log-note').value;
+            const type = document.getElementById('logger-title').innerText;
+
+            if (!val) { alert('اكتب البيانات الأول يا بطل!'); return; }
+            if (!currentUser) { alert('برجاء تسجيل الدخول أولاً'); return; }
+
+            btn.classList.add('loading');
+            btn.innerText = "جاري الحفظ...";
+
+            try {
+                await db.collection('logs').add({
+                    userPhone: currentUser.phone,
+                    type: type,
+                    value: val,
+                    note: note,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                document.getElementById('coach-list').innerHTML = h;
-            });
+                alert('عاش! البيانات وصلت للكابتن بنجاح 💪🔥');
+                closeLogger();
+            } catch (e) {
+                console.error(e);
+                alert('في مشكلة بسيطة في الشبكة.. جرب تاني كمان شوية');
+            } finally {
+                btn.classList.remove('loading');
+                btn.innerText = "حفظ للأبد ✅";
+            }
         }
 
-        async function viewMember(p) {
-            selectedMember = p;
-            const doc = await db.collection('users').doc(p).get();
-            const u = doc.data();
-            document.getElementById('det-name').innerText = u.name;
-            document.getElementById('det-age').innerText = u.age;
-            document.getElementById('det-height').innerText = u.height;
-            document.getElementById('det-weight').innerText = u.weight;
-            document.getElementById('det-prog').innerText = u.program;
-            document.getElementById('coach-note').value = u.daily_plan || "";
-            showScreen('scr-member-detail');
+        function closeLogger() {
+            document.getElementById('logger-ui').classList.add('hidden');
         }
 
-        async function savePlan() {
-            const plan = document.getElementById('coach-note').value;
-            await db.collection('users').doc(selectedMember).update({ 
-                daily_plan: plan,
-                status: 'approved' // تفعيل تلقائي عند وضع جدول
-            });
-            alert("تم التحديث! البطل هيشوف الجدول عنده حالاً.");
-            showScreen('scr-coach');
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.content-tab').forEach(t => t.classList.add('hidden'));
+            document.getElementById(tabId + '-tab').classList.remove('hidden');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
         }
-        let w=0; function addW() { w++; document.getElementById('u-wc').innerText=w; }
+
+        // Admin Function to view everyone
+        async function loadAllLogs() {
+            const list = document.getElementById('users-list');
+            const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').limit(20).get();
+            
+            if (snapshot.empty) {
+                list.innerHTML = '<p style="color: var(--text-muted);">لسه مفيش حد سجل النهاردة..</p>';
+                return;
+            }
+
+            let html = "";
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                html += `
+                    <div style="background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 14px;">
+                        <span style="color: var(--accent); font-weight: bold;">${data.userPhone}</span> سجل <span style="color: var(--primary);">${data.type}</span>: 
+                        <b>${data.value}</b> <br>
+                        <small style="color: #666;">${data.note || ''}</small>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
     </script>
 </body>
 </html>
