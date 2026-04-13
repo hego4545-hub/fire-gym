@@ -3,52 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fire Gym | Smart App</title>
-    <!-- Firebase SDKs -->
+    <title>Fire Gym | Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #e53935; --bg: #121212; --surface: #1e1e1e; --text: #fff; --accent: #ffb300; }
+        :root { --primary: #e53935; --primary-dark: #b71c1c; --bg: #121212; --surface: #1e1e1e; --text: #ffffff; --accent: #ffb300; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
-        #auth-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: #121212; padding: 20px; }
-        .card { background: var(--surface); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; width: 100%; max-width: 400px; }
-        input { width: 100%; padding: 15px; margin: 20px 0; border-radius: 12px; border: none; background: #000; color: #fff; text-align: center; font-size: 18px; }
-        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: #fff; font-weight: 900; font-size: 18px; cursor: pointer; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        
+        /* Auth */
+        #auth-screen { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { background: var(--surface); padding: 40px 20px; border-radius: 25px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; }
+        
+        /* App Content */
         #app-content { display: none; }
-        .top-header { background: #1e1e1e; padding: 40px 20px; text-align: center; border-bottom: 3px solid var(--primary); }
+        header { background: var(--surface); padding: 30px 20px; text-align: center; border-bottom: 2px solid var(--primary); border-radius: 0 0 30px 30px; }
+        .section { padding: 20px; }
+        .card { background: var(--surface); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #333; }
+        
+        /* Inputs & Buttons */
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: #fff; text-align: center; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: linear-gradient(45deg, var(--primary), var(--primary-dark)); color: #fff; font-weight: 900; cursor: pointer; }
+        .btn-sm { padding: 8px 15px; font-size: 14px; width: auto; margin-top: 10px; }
+
+        /* Tabs */
+        .tabs { position: fixed; bottom: 0; width: 100%; background: #1e1e1e; display: flex; justify-content: space-around; padding: 15px 0 30px; border-top: 1px solid #333; }
+        .tab { color: #888; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
+        .tab.active { color: var(--primary); font-weight: bold; }
+        
+        #admin-panel { display: none; padding: 20px; }
+        .log-item { background: #000; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-right: 4px solid var(--primary); }
     </style>
 </head>
 <body>
+    <!-- Auth Screen -->
     <div id="auth-screen">
-        <div class="card">
-            <h1 style="color: var(--primary); font-size: 40px;">FIRE GYM</h1>
-            <input type="tel" id="login-phone" placeholder="اكتب رقم موبايلك">
+        <div class="auth-card">
+            <h1 style="color: var(--primary); font-size: 40px; margin-bottom: 10px;">FIRE GYM</h1>
+            <p style="color: #888; margin-bottom: 20px;">سجل دخولك يا بطل 🔥</p>
+            <input type="tel" id="user-phone" placeholder="رقم موبايلك">
             <button class="btn" onclick="login()">دخول للأرض 🔥</button>
         </div>
     </div>
+
+    <!-- App Main Content -->
     <div id="app-content">
-        <div class="top-header">
-            <h2>مرحباً بطل فاير 👋</h2>
-        </div>
-        <div style="padding: 20px; text-align: center;">
+        <header>
+            <h2 id="welcome-msg">أهلاً بك 👋</h2>
+            <div id="admin-badge" style="display:none; color: var(--accent); font-weight: 900; margin-top: 5px;">[ لوحة الكابتن 🦁 ]</div>
+        </header>
+
+        <!-- User Section -->
+        <div id="user-section" class="section">
+            <div class="card">
+                <h3>تسجيل بيانات اليوم 📝</h3>
+                <select id="log-type">
+                    <option value="الوزن">الوزن</option>
+                    <option value="الأكل">الأكل</option>
+                    <option value="تمرين">التمرين</option>
+                    <option value="ملاحظة">ملاحظة للكابتن</option>
+                </select>
+                <input type="text" id="log-value" placeholder="اكتب القيمة أو الملاحظة التوضيحية">
+                <button class="btn" onclick="saveLog()">حفظ البيانات ✅</button>
+            </div>
+
             <div class="card" style="background: linear-gradient(45deg, #1e1e1e, #b71c1c);">
-                <h3>عداد المية 💧</h3>
-                <h1 id="w-count">0</h1>
-                <button class="btn" onclick="addW()" style="background: rgba(255,255,255,0.2);">+1 كوب</button>
+                <h3>عداد المياه 💧</h3>
+                <h1 id="water-count" style="font-size: 50px; margin: 10px 0;">0</h1>
+                <button class="btn" style="background: rgba(255,255,255,0.2);" onclick="addWater()">+1 كوب</button>
             </div>
         </div>
+
+        <!-- Admin Section -->
+        <div id="admin-panel">
+            <h3 style="margin-bottom: 15px;">آخر تحديثات المشتركين 📊</h3>
+            <div id="admin-logs-list">جارِ التحميل...</div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tabs">
+            <div class="tab active" onclick="showSection('user')">🏠 الرئيسية</div>
+            <div class="tab" id="admin-tab" style="display:none;" onclick="showSection('admin')">🦁 الكابتن</div>
+        </div>
     </div>
+
     <script>
-        let w = 0;
+        // CONFIG
+        const firebaseConfig = { projectId: "fire-gym-9c753" }; 
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentUser = "";
+        let water = 0;
+
         function login() {
-            const p = document.getElementById('login-phone').value;
-            if (p.length < 10) return alert('الرقم ناقص يا بطل!');
+            const phone = document.getElementById('user-phone').value;
+            if (phone.length < 10) return alert("الرقم ناقص يا بطل!");
+            
+            currentUser = phone;
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
+            document.getElementById('welcome-msg').innerText = "بطل فاير: " + phone;
+
+            if(phone === "01100896637") { // رقم الكابتن
+                document.getElementById('admin-badge').style.display = 'block';
+                document.getElementById('admin-tab').style.display = 'flex';
+                loadAdminData();
+            }
         }
-        function addW() { w++; document.getElementById('w-count').innerText = w; }
+
+        async function saveLog() {
+            const type = document.getElementById('log-type').value;
+            const val = document.getElementById('log-value').value;
+            if(!val) return alert("اكتب القيمة الأول!");
+
+            await db.collection('logs').add({
+                phone: currentUser,
+                type: type,
+                value: val,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("تم الحفظ بنجاح.. وحش يا بطل! 🔥");
+            document.getElementById('log-value').value = "";
+        }
+
+        function addWater() {
+            water++;
+            document.getElementById('water-count').innerText = water;
+        }
+
+        function showSection(name) {
+            document.getElementById('user-section').style.display = name === 'user' ? 'block' : 'none';
+            document.getElementById('admin-panel').style.display = name === 'admin' ? 'block' : 'none';
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if(name === 'user') document.querySelector('.tab:first-child').classList.add('active');
+            else document.getElementById('admin-tab').classList.add('active');
+        }
+
+        function loadAdminData() {
+            db.collection('logs').orderBy('timestamp', 'desc').limit(20).onSnapshot(snap => {
+                let html = "";
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    html += `<div class="log-item">
+                        <b>${data.phone}</b> سجل <b>${data.type}</b> <br>
+                        القيمة: <span style="color: var(--primary);">${data.value}</span>
+                    </div>`;
+                });
+                document.getElementById('admin-logs-list').innerHTML = html || "مفيش بيانات لسه..";
+            });
+        }
     </script>
 </body>
 </html>
