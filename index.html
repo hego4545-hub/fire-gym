@@ -5,13 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fire Gym | Universal Pro</title>
+    <title>Fire Gym | V8</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="firegym_auth.js"></script>
     <style>
         :root {
             --primary: #e53935;
@@ -661,7 +658,7 @@
                 <header style="padding: 40px 0 20px; text-align: center; background: none; border-bottom: none;">
                     <div
                         style="display:inline-block; font-size:10px; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); margin-bottom:15px;">
-                        V.6.7.0 ELITE 🔥</div>
+                        V.8.0.0 ELITE 🔥</div>
                     <h2
                         style="font-size:36px; font-weight:900; letter-spacing:-1.5px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">
                         يا كابتن <span id="user-display-name" style="color:var(--primary);">بطلنا</span> 👋</h2>
@@ -1428,6 +1425,11 @@
     <!-- Scripts (Firebase 9 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <!-- Library Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="firegym_auth.js"></script>
 
     <script>
         // إعدادات Firebase الحقيقية والمستقرة والمسترجعة
@@ -1454,7 +1456,14 @@
             const pass = document.getElementById('login-pass').value.trim();
             if (!p || !pass) return Swal.fire('خطأ', 'برجاء كتابة البيانات', 'error');
 
-            Swal.fire({ title: 'جاري التحقق...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            const btn = document.querySelector('#login-form button');
+            const originalText = btn.innerText;
+            btn.innerText = "جاري الدخول... ⏳";
+            btn.disabled = true;
+
+            try {
+                if (typeof Swal !== 'undefined') Swal.fire({ title: 'جاري التحقق...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            } catch(e) {}
 
             try {
                 if (p === ADMIN_PHONE) {
@@ -1462,31 +1471,47 @@
                     const adminDoc = { phone: p, name: "كابتن أحمد", status: "approved", role: "admin" };
                     // تأمين وجود مستند للأدمن في الداتابيز لتمكين تغيير الباسورد وغيره
                     await db.collection('users').doc(p).set(adminDoc, { merge: true });
-                    Swal.close();
+                    if (typeof Swal !== 'undefined') Swal.close();
                     enterApp(adminDoc);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
                     return;
                 }
                 const snap = await db.collection('users').doc(p).get();
-                Swal.close();
+                if (typeof Swal !== 'undefined') Swal.close();
+                
                 if (snap.exists) {
                     const data = snap.data();
                     if (data.password.toString().trim() === pass) {
-                        if (data.status !== 'approved') return Swal.fire('انتظر', 'طلبك تحت المراجعة من الكابتن', 'warning');
+                        if (data.status !== 'approved') {
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                            return Swal.fire('انتظر', 'طلبك تحت المراجعة من الكابتن', 'warning');
+                        }
                         localStorage.setItem('fire_gym_phone', p);
                         enterApp(data);
-                    } else { Swal.fire('خطأ', 'كلمة السر غير صحيحة يا وحش ❌', 'error'); }
-                } else { Swal.fire('خطأ', 'رقم الموبايل ده مش مسجل عندنا.. سجل بياناتك الأول يا بطل 🔥', 'error'); }
+                    } else { 
+                        Swal.fire('خطأ', 'كلمة السر غير صحيحة يا وحش ❌', 'error'); 
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                } else { 
+                    Swal.fire('خطأ', 'رقم الموبايل ده مش مسجل عندنا.. سجل بياناتك الأول يا بطل 🔥', 'error'); 
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
             } catch (e) {
-                Swal.close();
+                if (typeof Swal !== 'undefined') Swal.close();
                 Swal.fire({
                     title: 'خطأ في الاتصال',
-                    text: 'السبب التقني: ' + e.message,
+                    text: 'تأكد من الإنترنت: ' + e.message,
                     icon: 'error',
                     confirmButtonText: 'إعادة المحاولة'
                 });
                 console.error("Firebase Details:", e);
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
-
         }
 
 
