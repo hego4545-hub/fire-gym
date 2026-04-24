@@ -704,7 +704,7 @@
                         <button id="goal-change-btn" onclick="requestGoalChange()" class="btn-full" style="background:rgba(255,179,0,0.1); border:1px solid var(--accent); color:var(--accent); font-size:14px;">🔥 طلب تغيير النظام الحالي</button>
                         
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px; border-top:1px solid #333; pt:20px;">
-                            <button onclick="location.reload(true)" style="background:#1a1a1a; color:#fff; border:1px solid #333; padding:15px; border-radius:15px; font-size:12px; font-weight:bold;">🔄 تحديث النظام</button>
+                            <button onclick="forceUpdate()" style="background:#1a1a1a; color:#fff; border:1px solid #333; padding:15px; border-radius:15px; font-size:12px; font-weight:bold;">🔄 تحديث النظام</button>
                             <button onclick="logout()" style="background:rgba(255,0,0,0.1); color:#ff3b30; border:1px solid #ff3b30; padding:15px; border-radius:15px; font-weight:bold; font-size:12px;">🚶‍♂️ تسجيل خروج</button>
                         </div>
                     </div>
@@ -1140,7 +1140,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="scripts_bundle.js?v=7.0.5"></script>
+    <script src="scripts_bundle.js?v=7.0.6"></script>
 
     <!-- Full Screen Image Viewer (Fallback for Mobile) -->
     <div id="full-screen-viewer" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:300000; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
