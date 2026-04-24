@@ -1201,7 +1201,7 @@ function saveBlobAsFile(blob) {
                 title: 'جاهز للحفظ! 📸',
                 html: `
                     <p style="font-size:13px; color:#aaa; margin-bottom:15px;">اضغط ضغطة مطولة على الصورة تحت واختار <b>"Save Image"</b> أو <b>"Download Image"</b></p>
-                    <img src="${base64data}" style="width:100%; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #333;">
+                    <img src="${base64data}" style="width:100%; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #333; -webkit-touch-callout: default !important; -webkit-user-select: auto !important; user-select: auto !important;">
                 `,
                 background: '#121212',
                 color: '#fff',
