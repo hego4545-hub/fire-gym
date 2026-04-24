@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -60,7 +61,6 @@
             -webkit-backdrop-filter: blur(25px); 
             padding: 25px; 
             border-radius: 24px; 
-            margin-bottom: 25px; 
             border: 1px solid var(--glass-border); 
             position: relative; 
             box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
@@ -145,9 +145,41 @@
             .input-group input, .input-group select { padding: 15px; font-size: 15px; }
             .modal-content { width: 95% !important; padding: 20px !important; }
         }
+
+        /* Premium Exercise Cards */
+        .exercise-card:active { transform: scale(0.98); }
+        .exercise-card.done { 
+            background: rgba(76, 217, 100, 0.05) !important; 
+            border-color: rgba(76, 217, 100, 0.2) !important; 
+        }
+        .exercise-card.done h4 { color: var(--success) !important; }
+        
+        /* Custom Checkbox */
+        .checkbox-wrapper { position: relative; width: 30px; height: 30px; }
+        .custom-checkbox { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkbox-wrapper label {
+            position: absolute; top: 0; left: 0; height: 30px; width: 30px;
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .custom-checkbox:checked + label { 
+            background: var(--success); 
+            border-color: var(--success); 
+            box-shadow: 0 0 15px rgba(76, 217, 100, 0.4);
+        }
+        .checkbox-wrapper label::after {
+            content: ""; position: absolute; display: none;
+            left: 10px; top: 5px; width: 6px; height: 12px;
+            border: solid white; border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox:checked + label::after { display: block; }
         
         header { padding: 40px 20px 20px; background: none; text-align: center; }
-        .main-sections { padding: 15px; padding-bottom: 120px; }
+        .main-sections { padding: 15px; padding-bottom: 150px; }
+        .content-tab { min-height: calc(100vh - 100px); }
+        #app-content { overflow-y: visible !important; }
         
         .btn-full { 
             width: 100%; 
@@ -243,11 +275,39 @@
         }
         
         .history-item { 
-            margin-bottom: 20px; 
-            padding: 20px; 
-            background: rgba(255,255,255,0.02); 
-            border-radius: 22px; 
+            margin-bottom: 25px; 
+            padding: 22px; 
+            background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); 
+            border-radius: 28px; 
             border: 1px solid rgba(255,255,255,0.05); 
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+        .history-item:hover { border-color: rgba(255,59,48,0.3); transform: translateY(-3px); }
+        .del-btn { 
+            position: absolute; 
+            left: 20px; 
+            top: 20px; 
+            color: #ff3b30; 
+            cursor: pointer; 
+            font-size: 18px;
+            opacity: 0.4;
+            transition: 0.3s;
+        }
+        .del-btn:hover { opacity: 1; transform: scale(1.2); }
+
+        /* شريط تمرير ناعم واحترافي */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* جداول السجل النظيفة */
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; color: #ccc; }
+        .log-table td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .log-table tr:last-child td { border-bottom: none; }
+        .log-table b { color: var(--accent); }
             position:relative; 
             transition: all 0.3s ease; 
         }
@@ -325,16 +385,90 @@
         .menu-item-whatsapp { transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); -webkit-tap-highlight-color: transparent; }
         .menu-item-whatsapp:active { background: rgba(0,0,0,0.08); transform: scale(0.95); }
     
+        @keyframes cinematicEntrance {
+            0% { opacity: 0; transform: translateY(-20px) scale(0.95); filter: blur(10px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        .pulse-dot {
+            animation: pulseDot 2s infinite;
+        }
+        @keyframes pulseDot {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Share Card Styles */
+        #share-card-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 100000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(15px); padding: 20px;
+        }
+        #share-card {
+            width: 100%; max-width: 380px; aspect-ratio: 9/16;
+            background: #000;
+            border-radius: 45px; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 50px 120px rgba(0,0,0,0.9);
+            padding: 40px; text-align: center;
+        }
+        #share-card::before {
+            content: ""; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--primary), transparent 30%, transparent);
+            animation: rotateGlow 4s linear infinite;
+            z-index: 0;
+        }
+        #share-card::after {
+            content: ""; position: absolute; inset: 4px;
+            background: #080808; border-radius: 41px; z-index: 1;
+        }
+        #share-card-content { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .share-photo-container {
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 4px solid var(--primary);
+            margin-bottom: 25px; overflow: hidden;
+            box-shadow: 0 0 30px var(--primary-glow);
+            background: #222;
+        }
+        .share-photo-container img { width: 100%; height: 100%; object-fit: cover; }
+        .share-fire { font-size: 60px; filter: drop-shadow(0 0 20px var(--primary)); margin-bottom: 20px; animation: flame 1.5s ease-in-out infinite alternate; }
+        @keyframes flame {
+            0% { transform: scale(1) translateY(0); }
+            100% { transform: scale(1.1) translateY(-10px); }
+        }
+        .share-name { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .share-text { font-size: 18px; color: #aaa; font-weight: 600; line-height: 1.4; }
+        .share-badge { background: var(--primary); color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 10px; font-weight: 900; margin-top: 15px; text-transform: uppercase; letter-spacing: 2px; }
+        .share-logo { position: absolute; bottom: 30px; font-weight: 900; color: rgba(255,255,255,0.1); letter-spacing: 8px; font-size: 12px; }
     </style>
 
 </head>
 
 <body>
     <!-- Rest Timer Overlay -->
-    <div id="rest-timer-overlay" onclick="stopRestTimer()">
-        <div style="font-size:24px; margin-bottom:10px;">وقت الراحة ⏱️</div>
-        <div id="rest-seconds">60</div>
-        <div style="margin-top:20px; color:#777;">اضغط في أي مكان للإلغاء</div>
+    <div id="rest-timer-overlay" onclick="stopRestTimer()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:99999; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(20px);">
+        <div style="position:relative; width:280px; height:280px; display:flex; align-items:center; justify-content:center;">
+            <svg width="280" height="280" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
+                <circle id="rest-progress-circle" cx="50" cy="50" r="45" fill="none" stroke="var(--primary)" stroke-width="4" 
+                    stroke-dasharray="282.7" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)" 
+                    style="transition: stroke-dashoffset 1s linear; filter: drop-shadow(0 0 10px var(--primary-glow));" />
+            </svg>
+            <div style="position:absolute; text-align:center;">
+                <p style="color:#777; font-size:14px; margin-bottom:5px; font-weight:bold; letter-spacing:2px;">REST</p>
+                <h1 id="rest-seconds" style="font-size:85px; color:#fff; font-weight:900; line-height:1; text-shadow:0 0 20px rgba(0,0,0,0.5);">60</h1>
+                <p style="color:var(--primary); font-size:12px; margin-top:5px; font-weight:bold;">ثانية</p>
+            </div>
+        </div>
+        <p style="color:#444; margin-top:40px; font-size:12px; font-weight:bold; letter-spacing:1px; animation: pulse 2s infinite;">إضغط في أي مكان للإلغاء</p>
     </div>
 
     <!-- Auth Section -->
@@ -401,14 +535,23 @@
                     </div>
                     
                     <div style="display:inline-block; font-size:10px; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); margin-bottom:15px;">V.6.7.2 ELITE 🔥</div>
-                    <h2 style="font-size:36px; font-weight:900; letter-spacing:-1.5px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">يا كابتن <span id="user-display-name" style="color:var(--primary);">بطلنا</span> 👋</h2>
+                    <h2 style="font-size:36px; font-weight:900; letter-spacing:-1.5px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">يا كابتن <span id="user-display-name" style="color:var(--primary);">بطلنا</span> 🔥</h2>
+                    
+                    <!-- ملاحظة الكابتن بتصميم سنمائي تحت الاسم -->
+                    <div id="captain-notes-box" class="hidden" style="margin: 15px auto; max-width: 90%; background: rgba(255,179,0,0.05); border: 1px solid rgba(255,179,0,0.2); border-radius: 20px; padding: 15px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: cinematicEntrance 1s ease-out;">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:5px;">
+                            <span style="font-size:12px; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:2px;">Captain's Message</span>
+                            <span class="pulse-dot" style="width:6px; height:6px; background:var(--accent); border-radius:50%;"></span>
+                        </div>
+                        <p id="captain-notes-text" style="font-size:16px; font-weight:bold; color:#fff; line-height:1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin:0;"></p>
+                    </div>
                 </header>
-                <!-- بنر النظام المخصص (تم تحسين التنسيق) -->
-                <div id="system-banner" style="width:100%; height:220px; border-radius:30px; margin-bottom:30px; background-size:cover; background-position:center; position:relative; overflow:hidden; border:2px solid #222; box-shadow:0 15px 35px rgba(0,0,0,0.6);">
-                    <div style="position:absolute; bottom:0; left:0; width:100%; height:70%; background:linear-gradient(transparent, rgba(0,0,0,0.95)); padding:25px; display:flex; justify-content:space-between; align-items:end;">
-                        <div>
-                            <div id="system-title-badge" style="background:var(--primary); color:#fff; padding:4px 12px; border-radius:10px; font-size:11px; font-weight:900; margin-bottom:8px; display:inline-block; text-transform:uppercase; letter-spacing:1px;"></div>
-                            <h3 id="system-main-title" style="margin:0; font-size:26px; font-weight:900; text-shadow:2px 2px 10px rgba(0,0,0,0.8); color:#fff; letter-spacing: -0.5px;"></h3>
+                <!-- بنر النظام المخصص (تصغير المستطيل) -->
+                <div id="system-banner" style="width:100%; height:130px; border-radius:25px; margin-bottom:20px; background-size:cover; background-position:center; position:relative; overflow:hidden; border:1px solid rgba(255,255,255,0.05); box-shadow:0 10px 25px rgba(0,0,0,0.4);">
+                    <div style="position:absolute; bottom:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, rgba(0,0,0,0.85) 0%, transparent 60%); padding:20px; display:flex; justify-content:flex-end; align-items:center;">
+                        <div style="text-align:right;">
+                            <div id="system-title-badge" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:8px; font-size:10px; font-weight:900; margin-bottom:5px; display:inline-block; text-transform:uppercase; letter-spacing:1px;"></div>
+                            <h3 id="system-main-title" style="margin:0; font-size:20px; font-weight:900; text-shadow:2px 2px 10px rgba(0,0,0,0.8); color:#fff; letter-spacing: -0.5px;"></h3>
                         </div>
                     </div>
                 </div>
@@ -438,31 +581,23 @@
 
                     <div id="user-plan-tabs" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:15px 0;"></div>
 
+                    <!-- مكان عرض الجدول والزرار الأصفر المفقود -->
+                    <button id="workout-timer-btn" class="btn-full hidden" onclick="toggleWorkoutTimer()" style="background:var(--accent); color:#000; font-weight:bold; font-size:14px; margin-top:10px; margin-bottom:15px; border:none; border-radius:15px; padding:15px; box-shadow: 0 4px 15px rgba(255,179,0,0.3);">⏱️ وقت التمرين: <span id="workout-timer-display">00:00:00</span></button>
+
                     <div id="user-plan-view" class="hidden">
-                        <table class="workout-table" id="view-table">
-                            <thead><tr><th>التمرين/الوجبة</th><th>التفاصيل</th><th>وزن/كمية</th><th>تم ✅</th></tr></thead>
-                            <tbody id="view-rows"></tbody>
-                        </table>
-                        <div id="vip-timer-box" class="hidden" style="background:var(--accent); color:#000; padding:15px; text-align:center; font-weight:900; border-radius:15px; margin-top:20px; cursor:pointer;" onclick="toggleWorkoutTimer()">
-                            ⏱️ وقت التمرين: <span id="workout-timer-display">00:00:00</span>
-                            <div id="finish-workout-btn" class="hidden" style="background:#000; color:#fff; padding:5px 10px; border-radius:8px; margin-top:8px; font-size:12px;">إنهاء ونشر النشاط ✅</div>
-                        </div>
-                        <table class="workout-table hidden" id="vip-view-table">
-                            <thead style="background:#1e1e1e; color:#fff; border-bottom:2px solid var(--primary)">
-                                <tr><th>التمرين</th><th>مج</th><th>نوع</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>تم</th></tr>
-                            </thead>
-                            <tbody id="vip-view-rows"></tbody>
-                        </table>
+                        <div id="plan-cards-container"></div>
                     </div>
                 </div>
 
-                <div id="captain-notes-box" class="card hidden" style="background:rgba(255,179,0,0.1); border:2px solid var(--accent); border-radius:15px;">
-                    <b style="color:var(--accent); display:block; margin-bottom:10px;">📢 ملاحظة الكابتن لك:</b>
-                    <p id="captain-notes-text" style="font-size:18px; font-weight:bold; color:#fff; line-height:1.5;"></p>
-                </div>
+
 
                 <div id="nutrition-extras" class="hidden" style="margin-top:25px;">
-                    <div id="food-prefs-section" class="card" style="border-top:4px solid #4caf50; background:rgba(0,0,0,0.4);">
+                    <div id="nutrition-nav-buttons" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <button onclick="toggleNutritionSection('food-prefs-section')" class="btn-full" style="background:rgba(76,175,80,0.1); border:1px solid #4caf50; color:#4caf50; font-size:12px; padding:12px; border-radius:15px; font-weight:bold;">🥗 تفضيلات الأكل</button>
+                        <button onclick="toggleNutritionSection('recipes-section')" class="btn-full" style="background:rgba(255,179,0,0.1); border:1px solid var(--accent); color:var(--accent); font-size:12px; padding:12px; border-radius:15px; font-weight:bold;">👨‍🍳 وصفات أون فاير</button>
+                    </div>
+
+                    <div id="food-prefs-section" class="card hidden" style="border-top:4px solid #4caf50; background:rgba(0,0,0,0.4);">
                         <h3 style="color:#4caf50; display:flex; align-items:center; gap:10px; margin-bottom:15px;">🥗 جدول تفضيلات الأكل</h3>
                         <p style="font-size:11px; color:#777; margin-bottom:15px;">اكتب هنا الأكلات اللي بتحبها (❤️) واللي مش بتحبها (💔) عشان الكابتن يراعيها في نظامك الدايت.</p>
                         
@@ -482,8 +617,8 @@
                         <button class="btn-full" onclick="addPrefRow()" style="background:#222; border:1px dashed #444; color:#777; margin-top:15px; padding:12px; font-size:13px;">+ إضافة صنف جديد</button>
                         <button class="btn-full" onclick="saveFoodPrefs()" style="background:var(--success); color:#000; margin-top:15px; font-weight:bold; font-size:17px; box-shadow: 0 4px 15px rgba(76,175,80,0.3);">✅ حفظ الجدول للكابتن</button>
                     </div>
-                    <div class="card">
-                        <h3>👨‍🍳 وصفات أون فاير 🔥</h3>
+                    <div id="recipes-section" class="card hidden" style="border-top:4px solid var(--accent); background:rgba(0,0,0,0.4);">
+                        <h3 style="color:var(--accent); display:flex; align-items:center; gap:10px; margin-bottom:15px;">👨‍🍳 وصفات أون فاير 🔥</h3>
                         <div id="recipes-gallery" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;"></div>
                     </div>
                 </div>
@@ -618,6 +753,11 @@
                             <input type="file" id="recipe-img" class="hidden" accept="image/*" onchange="processRecipeImg(this)">
                             <button onclick="saveRecipe()" style="background:var(--accent); color:#000; border:none; padding:8px 20px; border-radius:10px; font-weight:bold;">نشر ✅</button>
                         </div>
+                    </div>
+
+                    <!-- خانة البحث برقم الموبايل -->
+                    <div class="input-group" style="margin: 10px 0 20px;">
+                        <input type="tel" id="admin-search-phone" placeholder="🔍 ابحث برقم الموبايل..." oninput="filterAdminUsers()" style="border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 15px; width: 100%; color: #fff; outline: none; transition: 0.3s;">
                     </div>
                     <div id="admin-user-filters" style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:20px;">
                         <button class="sub-btn" style="background:var(--primary); font-size:10px;" onclick="filterAdminUsers('all')">الكل</button>
@@ -907,6 +1047,24 @@
         </div>
     </div>
 
+    <!-- Exercise Editor Modal (Sub-page) -->
+    <div id="ex-editor-modal" class="modal hidden" style="z-index: 10010;">
+        <div class="card" style="width:95%; max-width:500px; padding:25px; background:#0a0a0a; border:1px solid #333; max-height:90vh; overflow-y:auto; border-radius:30px; box-shadow: 0 0 50px rgba(0,0,0,1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 id="ex-editor-name" style="color:var(--accent); margin:0; font-size:20px;">اسم التمرين</h2>
+                <button onclick="document.getElementById('ex-editor-modal').classList.add('hidden'); viewCatPlan(lastViewedCat);" style="background:#222; border:none; color:#fff; width:35px; height:35px; border-radius:50%;">✕</button>
+            </div>
+            
+            <div style="background:rgba(255,179,0,0.05); padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid rgba(255,179,0,0.1);">
+                <p style="font-size:12px; color:#777; margin:0;">الهدف: <b id="ex-editor-sets" style="color:var(--accent);">4</b> مجموعات</p>
+            </div>
+
+            <div id="ex-editor-sets-container" style="overflow-x:auto;"></div>
+
+            <button id="ex-editor-close-btn" onclick="document.getElementById('ex-editor-modal').classList.add('hidden'); viewCatPlan(lastViewedCat);" class="btn-full" style="background:var(--primary); margin-top:30px;">تم التعديل ✅</button>
+        </div>
+    </div>
+
     <!-- نافذة إضافة التكنيك (للأدمن) -->
     <div id="technique-modal" class="modal hidden" style="z-index: 10007;">
         <div class="card" style="width:95%; max-width:550px; padding:25px; background:#0a0a0a; border:1px solid #333; max-height:85vh; overflow-y:auto; border-radius:30px;">
@@ -937,1413 +1095,38 @@
                 <h3 style="color:var(--accent); margin:0; display:flex; align-items:center; gap:10px;">🔔 التنبيهات والرسائل</h3>
                 <button onclick="closeNotifModal()" style="background:#222; border:none; color:#fff; width:35px; height:35px; border-radius:50%;">✕</button>
             </div>
-            <div id="notif-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+            <div id="static-notif-list-view" style="display:flex; flex-direction:column; gap:12px;"></div>
             <p style="text-align:center; color:#444; font-size:11px; margin-top:20px;">سيتم حذف التنبيهات القديمة تلقائياً لتوفير المساحة 🛠️</p>
         </div>
     </div>
 
-    <!-- Scripts -->
+
+    <!-- Share Card Design -->
+    <div id="share-card-overlay">
+        <div id="share-card">
+            <div id="share-card-content">
+                <div class="share-photo-container">
+                    <img id="share-user-img" src="https://via.placeholder.com/150" alt="User">
+                </div>
+                <div class="share-fire">🔥</div>
+                <div class="share-name" id="share-user-name">اسم البطل</div>
+                <div class="share-text" id="share-workout-text">خلصت تمرينة النهاردة<br>مع <span style="color:var(--primary);">Fire Gym</span></div>
+                <div class="share-badge" id="share-random-phrase">Official Athlete</div>
+                <div style="margin-top:40px; color:#333; font-size:10px; font-weight:bold; letter-spacing:2px;">#FIRE_GYM #NO_LIMITS #WORKOUT</div>
+                <div class="share-logo">FIRE GYM ELITE</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:15px; margin-top:30px; width:100%; max-width:380px;">
+            <button class="btn-full" onclick="downloadShareCard()" style="background:#fff; color:#000; flex:2; font-size:16px;">حفظ الصورة 📥</button>
+            <button class="btn-full" onclick="closeShareCard()" style="background:#222; flex:1; font-size:16px;">إلغاء</button>
+        </div>
+    </div>
+
     <!-- Scripts (Firebase 9 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="scripts_bundle.js"></script>
 
-    <script>
-        // إعدادات Firebase الحقيقية والمستقرة والمسترجعة
-        const firebaseConfig = { 
-            apiKey: "AIzaSyAxMNBdkNk_brPMlq1O3_HPRWOIqj-lb24", 
-            authDomain: "fire-gym-9c753.firebaseapp.com", 
-            projectId: "fire-gym-9c753", 
-            storageBucket: "fire-gym-9c753.firebasestorage.app", 
-            messagingSenderId: "417014585133", 
-            appId: "1:417014585133:web:38f62686ae2e133298a5a4" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        let currentUser = null; let activeTarget = null; let currentPlanData = {}; let finalBase64 = "";
-        let allUsersData = []; 
-        const ADMIN_PHONE = "01100896637";
-
-        const PLAN_CATS = ['بنج', 'ظهر', 'كتف', 'دراع', 'رجل', 'بطن'];
-        const NUTRI_CATS = ['فطار', 'غداء', 'عشاء', 'سناك', 'قبل التمرين', 'بعد التمرين', 'فيتامينات ومكملات'];
-
-        async function login() {
-            const p = document.getElementById('login-phone').value.trim();
-            const pass = document.getElementById('login-pass').value.trim();
-            if(!p || !pass) return Swal.fire('خطأ', 'برجاء كتابة البيانات', 'error');
-            
-            Swal.fire({ title: 'جاري التحقق...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            try {
-                if(p === ADMIN_PHONE) { 
-                    localStorage.setItem('fire_gym_phone', p);
-                    const adminDoc = { phone: p, name: "كابتن أحمد", status: "approved", role: "admin" };
-                    // تأمين وجود مستند للأدمن في الداتابيز لتمكين تغيير الباسورد وغيره
-                    await db.collection('users').doc(p).set(adminDoc, { merge: true });
-                    Swal.close(); 
-                    enterApp(adminDoc); 
-                    return; 
-                }
-                const snap = await db.collection('users').doc(p).get();
-                Swal.close();
-                if(snap.exists) {
-                    const data = snap.data();
-                    if(data.password.toString().trim() === pass) {
-                        if(data.status !== 'approved') return Swal.fire('انتظر', 'طلبك تحت المراجعة من الكابتن', 'warning');
-                        localStorage.setItem('fire_gym_phone', p);
-                        enterApp(data);
-                    } else { Swal.fire('خطأ', 'كلمة السر غير صحيحة يا وحش ❌', 'error'); }
-                } else { Swal.fire('خطأ', 'رقم الموبايل ده مش مسجل عندنا.. سجل بياناتك الأول يا بطل 🔥', 'error'); }
-            } catch(e) { 
-                Swal.close(); 
-                Swal.fire({
-                    title: 'خطأ في الاتصال',
-                    text: 'السبب التقني: ' + e.message,
-                    icon: 'error',
-                    confirmButtonText: 'إعادة المحاولة'
-                });
-                console.error("Firebase Details:", e);
-            }
-
-        }
-
-
-        let userListener = null;
-        async function enterApp(u) {
-            currentUser = u; 
-            document.getElementById('auth-section').classList.add('hidden'); 
-            document.getElementById('app-content').classList.remove('hidden');
-            const nav = document.getElementById('bottom-nav-bar');
-            if(nav) nav.classList.remove('hidden');
-            switchTab('user', document.querySelector('.bottom-tabs .tab.active'));
-            
-            if(userListener) userListener();
-            userListener = db.collection('users').doc(u.phone).onSnapshot((doc) => {
-                if(doc.exists) {
-                    const data = doc.data();
-                    currentUser = data;
-                    currentPlanData = data.workoutPlan || {};
-                    
-                    // تحديث صور النظام المخصصة
-                    const goal = data.goal || "";
-                    const banner = document.getElementById('system-banner');
-                    const title = document.getElementById('system-main-title');
-                    const badge = document.getElementById('system-title-badge');
-
-                    if(data.role === 'admin') {
-                        banner.style.background = "linear-gradient(135deg, #0f0f0f, #2a2a2a)";
-                        banner.style.backgroundImage = "none";
-                        title.innerText = "لوحة قيادة الكابتن 👨‍🏫";
-                        badge.innerText = "مدير المنظومة";
-                        badge.style.background = "linear-gradient(to right, #e53935, #b71c1c)";
-                    } else if(goal.includes('VIP')) {
-                        banner.style.background = "linear-gradient(135deg, #1a1500, #4d3d00)";
-                        banner.style.backgroundImage = "none";
-                        title.innerText = "نظام VIP الملكي ⭐";
-                        badge.innerText = "نظام VIP";
-                        badge.style.background = "linear-gradient(to right, #ffb300, #ff8f00)";
-                    } else if(goal.includes('تغذيه')) {
-                        banner.style.background = "linear-gradient(135deg, #0a140a, #1b5c2a)";
-                        banner.style.backgroundImage = "none";
-                        title.innerText = "نظام التغذية المتكامل 🥗";
-                        badge.innerText = "نظام تغذية";
-                        badge.style.background = "#4caf50";
-                    } else {
-                        banner.style.background = "linear-gradient(135deg, #0a0e14, #1b3d5c)";
-                        banner.style.backgroundImage = "none";
-                        title.innerText = "نظام التدريب الحديدي 🏋️‍♂️";
-                        badge.innerText = "نظام تدريب";
-                        badge.style.background = "var(--primary)";
-                    }
-                    
-                    document.getElementById('user-display-name').innerText = data.name;
-                    document.getElementById('me-name').innerText = data.name;
-                    document.getElementById('me-weight').innerText = (data.weight || '--') + ' كغم';
-                    document.getElementById('me-height').innerText = (data.height || '--') + ' سم';
-                    document.getElementById('me-fat').innerText = (data.fat || '0') + ' %';
-                    document.getElementById('me-goal-badge').innerText = (data.role === 'admin' ? '👑 كابتن الفريق' : (data.goal || 'بطل فير جيم'));
-                    if(data.photo) document.getElementById('me-photo').src = data.photo;
-                    
-                    const noteBox = document.getElementById('captain-notes-box');
-                    if(data.captainNotes) {
-                        noteBox.classList.remove('hidden');
-                        document.getElementById('captain-notes-text').innerText = data.captainNotes;
-                    } else { noteBox.classList.add('hidden'); }
-
-                    renderUserPlanTabs();
-                }
-            });
-
-            renderTrackerGrid(); loadUserLogs(); checkWaterReset();
-            initSystemNotifications(); // تفعيل الإشعارات والمراقبة إجبارياً للجميع
-            
-            if(u.role === 'admin') { 
-                document.getElementById('admin-nav').classList.remove('hidden'); 
-                document.getElementById('admin-info-menu-btn').classList.remove('hidden');
-                document.getElementById('add-technique-btn').classList.remove('hidden');
-                loadAdmin(); 
-            } else {
-                loadRecipes();
-                loadFoodPrefs();
-            }
-        }
-
-        function renderTrackerGrid() {
-            const grid = document.getElementById('main-tracker-grid');
-            const g = currentUser.goal || "";
-            let html = `<div class="track-btn" onclick="openLogger('وزن')"><b>⚖️</b>وزن</div><div class="track-btn" onclick="openLogger('وجبة')"><b>🥗</b>وجبة</div><div class="track-btn" onclick="openLogger('تمرين')"><b>💪</b>تمرين</div><div class="track-btn" onclick="openLogger('صور')"><b>📸</b>صور</div>`;
-            if (currentUser.role !== 'admin') {
-                if(g.includes('تدريب')) html = `<div class="track-btn" onclick="openLogger('تمرين')"><b>💪</b>تمرين</div><div class="track-btn" onclick="openLogger('صور')"><b>📸</b>صور</div>`;
-                else if(g.includes('تغذيه')) html = `<div class="track-btn" onclick="openLogger('وجبة')"><b>🥗</b>وجبة</div><div class="track-btn" onclick="openLogger('وزن')"><b>⚖️</b>وزن</div>`;
-            }
-            grid.innerHTML = html;
-        }
-
-        function renderUserPlanTabs() {
-            const container = document.getElementById('user-plan-tabs');
-            const extras = document.getElementById('nutrition-extras');
-            const g = currentUser.goal || ""; let html = "";
-            if(g.includes('VIP')) { document.getElementById('vip-toggle-container').classList.remove('hidden'); switchVipMode('workout'); extras.classList.remove('hidden'); loadFoodPrefs(); loadRecipes(); }
-            else {
-                if(g.includes('تدريب')) html += PLAN_CATS.map(c => `<button class="sub-btn" style="background:#1a1a1a; color:var(--primary); font-size:12px;" onclick="viewCatPlan('${c}')">🏋️ ${c}</button>`).join('');
-                if(g.includes('تغذيه')) { html += NUTRI_CATS.map(c => `<button class="sub-btn" style="background:#1a1a1a; color:#4caf50; font-size:12px;" onclick="viewCatPlan('${c}')">🥗 ${c}</button>`).join(''); extras.classList.remove('hidden'); loadFoodPrefs(); loadRecipes(); }
-            }
-            container.innerHTML = html; db.collection('users').doc(currentUser.phone).get().then(doc => currentPlanData = doc.data().workoutPlan || {});
-        }
-
-        function switchVipMode(mode) {
-            const container = document.getElementById('user-plan-tabs'); const btnW = document.getElementById('btn-show-workout'); const btnN = document.getElementById('btn-show-nutrition');
-            if(mode === 'workout'){ btnW.style.background = 'var(--primary)'; btnN.style.background = 'transparent'; container.innerHTML = PLAN_CATS.map(c => `<button class="sub-btn" style="background:rgba(229,57,53,0.1); color:var(--primary);" onclick="viewCatPlan('${c}')">🏋️ ${c}</button>`).join(''); }
-            else { btnN.style.background = '#4caf50'; btnW.style.background = 'transparent'; container.innerHTML = NUTRI_CATS.map(c => `<button class="sub-btn" style="background:rgba(76,175,80,0.1); color:#4caf50;" onclick="viewCatPlan('${c}')">🥗 ${c}</button>`).join(''); }
-        }
-
-        function viewCatPlan(cat) {
-            const view = document.getElementById('user-plan-view'); 
-            const isNutri = NUTRI_CATS.includes(cat);
-            view.classList.remove('hidden');
-            const exs = currentPlanData[cat] || [];
-            
-            document.getElementById('view-table').classList.add('hidden');
-            document.getElementById('vip-view-table').classList.add('hidden');
-            document.getElementById('vip-timer-box').classList.toggle('hidden', isNutri);
-
-            if(isNutri) {
-                let tableHtml = `
-                    <div style="background:rgba(255,179,0,0.05); border:1px solid rgba(255,179,0,0.2); border-radius:20px; padding:20px; margin-bottom:15px; position:relative; overflow:hidden;">
-                        <h5 style="color:var(--accent); margin-bottom:15px; display:flex; align-items:center; gap:8px;">🥗 البرنامج الغذائي: ${cat}</h5>
-                        <div style="overflow-x:auto; border-radius:15px; border:1px solid #222;">
-                            <table style="width:100%; border-collapse:collapse; text-align:right;">
-                                <thead>
-                                    <tr style="background:#111; color:var(--accent); font-size:11px;">
-                                        <th style="padding:15px; border:1px solid #222;">نوع الأكل</th>
-                                        <th style="padding:15px; border:1px solid #222;">التفاصيل</th>
-                                        <th style="padding:15px; border:1px solid #222;">الكمية</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${exs.map(ex => `
-                                        <tr style="border-bottom:1px solid #222; transition:0.3s;" onmouseover="this.style.background='rgba(255,179,0,0.03)'" onmouseout="this.style.background='transparent'">
-                                            <td style="padding:15px; color:#fff; font-weight:bold; font-size:14px;">${ex.name}</td>
-                                            <td style="padding:15px; color:#aaa; font-size:13px;">${ex.note || '---'}</td>
-                                            <td style="padding:15px; color:var(--accent); font-weight:bold;">${ex.weight || 'حسب الرغبة'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>`;
-                
-                if(!document.getElementById('plan-cards-container')) {
-                    const c = document.createElement('div'); c.id = "plan-cards-container";
-                    view.appendChild(c);
-                }
-                const container = document.getElementById('plan-cards-container');
-                container.innerHTML = exs.length ? tableHtml : '<p style="text-align:center; padding:30px; color:#444;">مفيش بيانات لسه يا بطل 🔥</p>';
-                return;
-            }
-
-            // نظام الجدول الأفقي المجمع للتمارين
-            let tableHtml = `
-                <div style="overflow-x:auto; background:rgba(0,0,0,0.2); border-radius:15px; border:1px solid #333; margin-bottom:20px;">
-                    <table style="width:100%; border-collapse:collapse; text-align:center; min-width:600px;">
-                        <thead>
-                            <tr style="background:#111; color:#777; font-size:11px;">
-                                <th style="padding:12px; border:1px solid #222; position:sticky; right:0; background:#111; z-index:2;">التمرين</th>
-                                <th style="padding:12px; border:1px solid #222;">مج</th>
-                                <th style="padding:12px; border:1px solid #222;">نوع</th>
-                                ${[1,2,3,4,5,6].map(n => `<th style="padding:12px; border:1px solid #222;">${n}</th>`).join('')}
-                                <th style="padding:12px; border:1px solid #222;">صح</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${exs.map((ex, i) => `
-                                <tr style="border-top:2px solid #333;">
-                                    <td rowspan="2" style="padding:10px; border:1px solid #222; position:sticky; right:0; background:#0a0a0a; color:#fff; font-weight:bold; z-index:2;">${ex.name}</td>
-                                    <td rowspan="2" style="padding:10px; border:1px solid #222; color:var(--primary); font-weight:bold;">${ex.sets || '4'}</td>
-                                    <td style="padding:8px; border:1px solid #222; color:var(--accent); font-size:10px; background:rgba(255,215,0,0.05);">وزن</td>
-                                    ${[1,2,3,4,5,6].map(n => `<td style="padding:8px; border:1px solid #222; color:var(--accent); font-weight:bold; font-size:13px; background:rgba(255,215,0,0.02);">${ex['w'+n] || '-'}</td>`).join('')}
-                                    <td rowspan="2" style="padding:10px; border:1px solid #222;">
-                                        <input type="checkbox" style="width:28px; height:28px; accent-color:var(--success);" ${ex.done?'checked':''} onchange="toggleExDone('${cat}', ${i}, this.checked, '${ex.name}')">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px; border:1px solid #222; color:var(--success); font-size:10px; background:rgba(76,175,80,0.05);">عدة</td>
-                                    ${[1,2,3,4,5,6].map(n => `<td style="padding:8px; border:1px solid #222; color:var(--success); font-weight:bold; font-size:13px; background:rgba(76,175,80,0.02);">${ex['r'+n] || '-'}</td>`).join('')}
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <button onclick="startRestTimer(60)" class="btn-full" style="background:#222; font-size:13px; padding:12px; border:1px solid #333;">⏱️ ابدأ مؤقت الراحة (60 ثانية)</button>
-            `;
-
-            if(!document.getElementById('plan-cards-container')) {
-                const c = document.createElement('div'); c.id = "plan-cards-container";
-                view.appendChild(c);
-            }
-            document.getElementById('plan-cards-container').innerHTML = exs.length ? tableHtml : '<p style="text-align:center; padding:30px; color:#444;">مفيش تدريبات هنا لسه 🔥</p>';
-        }
-
-        let workoutInterval = null, totalSeconds = 0, isWorkoutRunning = false;
-        function toggleWorkoutTimer() {
-            const box = document.getElementById('vip-timer-box');
-            const display = document.getElementById('workout-timer-display');
-            const finishBtn = document.getElementById('finish-workout-btn');
-
-            if(!isWorkoutRunning) {
-                isWorkoutRunning = true;
-                box.style.background = "#ff3b30"; // تغيير اللون للأحمر عند البدء
-                finishBtn.classList.remove('hidden');
-                workoutInterval = setInterval(() => {
-                    totalSeconds++;
-                    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-                    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-                    const s = (totalSeconds % 60).toString().padStart(2, '0');
-                    display.innerText = `${h}:${m}:${s}`;
-                }, 1000);
-                Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'بدأ وقت التمرين 🔥', showConfirmButton: false, timer: 1500, background: '#1e1e1e', color: '#fff' });
-            } else {
-                finishWorkoutSession();
-            }
-        }
-
-        async function finishWorkoutSession() {
-            if(!isWorkoutRunning) return;
-            const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-            const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-            const s = (totalSeconds % 60).toString().padStart(2, '0');
-            const finalTime = `${h}:${m}:${s}`;
-
-            clearInterval(workoutInterval);
-            isWorkoutRunning = false;
-            document.getElementById('vip-timer-box').style.background = "var(--accent)";
-            document.getElementById('finish-workout-btn').classList.add('hidden');
-            
-            // تصفير كل علامات الصح في جدول التمرين
-            for (let cat in currentPlanData) {
-                if(Array.isArray(currentPlanData[cat])) {
-                    currentPlanData[cat].forEach(ex => ex.done = false);
-                }
-            }
-            await db.collection('users').doc(currentUser.phone).update({ 
-                workoutPlan: currentPlanData 
-            });
-
-            await db.collection('logs').add({
-                uName: currentUser.name,
-                uPhone: currentUser.phone,
-                type: 'وقت التمرين',
-                val: `⏱️ استغرق البطل ${finalTime} في تدريبه اليوم 🔥`,
-                ts: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            Swal.fire({ title: 'عاش يا وحش! 💪', text: `وقت تمرينك النهاردة: ${finalTime}\nتم تصفير الجدول لتمرينك الجاي! 🔥`, icon: 'success', background: '#1e1e1e', color: '#fff' });
-            totalSeconds = 0;
-            document.getElementById('workout-timer-display').innerText = "00:00:00";
-            loadUserLogs();
-        }
-
-        async function toggleExDone(cat, idx, status, exName) { 
-            currentPlanData[cat][idx].done = status; 
-            await db.collection('users').doc(currentUser.phone).update({ workoutPlan: currentPlanData }); 
-            
-            if(status) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                const ex = currentPlanData[cat][idx];
-                const newExData = {
-                    name: exName,
-                    time: timeStr,
-                    sets: ex.sets || '4',
-                    w: [ex.w1, ex.w2, ex.w3, ex.w4, ex.w5, ex.w6],
-                    r: [ex.r1, ex.r2, ex.r3, ex.r4, ex.r5, ex.r6]
-                };
-
-                try {
-                    const snap = await db.collection('logs')
-                        .where('uPhone', '==', currentUser.phone)
-                        .where('type', '==', 'تمرين')
-                        .where('sub', '==', cat)
-                        .get();
-
-                    let targetDoc = null;
-                    const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
-
-                    snap.forEach(doc => {
-                        const data = doc.data();
-                        const ts = data.ts ? data.ts.toMillis() : 0;
-                        if(ts > twoHoursAgo) {
-                            if(!targetDoc || ts > targetDoc.data().ts.toMillis()) targetDoc = doc;
-                        }
-                    });
-
-                    if(targetDoc) {
-                        let existingExs = JSON.parse(targetDoc.data().val);
-                        existingExs.push(newExData);
-                        await db.collection('logs').doc(targetDoc.id).update({ val: JSON.stringify(existingExs) });
-                    } else {
-                        throw new Error("No recent log");
-                    }
-                } catch(e) {
-                    await db.collection('logs').add({
-                        uName: currentUser.name, uPhone: currentUser.phone,
-                        type: 'تمرين', sub: cat, val: JSON.stringify([newExData]),
-                        ts: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم تسجيل الانجاز ✅', showConfirmButton: false, timer: 1500, background: '#1e1e1e', color: '#fff' });
-                loadUserLogs();
-            }
-        }
-
-        const CATS = { 'وجبة': ['فطار', 'غداء', 'عشاء', 'سناك', 'فيتامينات ومكملات'], 'تمرين': ['بنج', 'ظهر', 'كتف', 'دراع', 'رجل', 'بطن'] }; let cType = "", cSub = "";
-        function openLogger(t) { cType = t; cSub = ""; finalBase64 = ""; document.getElementById('logger-title').innerText = "تسجيل " + t; document.getElementById('logger-modal').classList.remove('hidden'); document.getElementById('img-preview').classList.add('hidden'); document.getElementById('log-val').value = ""; document.getElementById('log-note').value = ""; if(CATS[t]) { document.getElementById('category-menu').classList.remove('hidden'); document.getElementById('log-inputs').classList.add('hidden'); document.getElementById('category-btns').innerHTML = CATS[t].map(s => `<button class="track-btn" onclick="setSub('${s}')">${s}</button>`).join(''); } else showInputs(); }
-        function setSub(s) { cSub = s; if(cType==='تمرين'){ closeLogger(); openWorkoutTable(s); } else showInputs(); }
-        function showInputs() { document.getElementById('category-menu').classList.add('hidden'); document.getElementById('log-inputs').classList.remove('hidden'); document.getElementById('file-wrapper').classList.toggle('hidden', cType !== 'صور'); }
-        function handleImageProcessing(input) {
-            if (!input.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 800;
-                    let width = img.width;
-                    let height = img.height;
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    canvas.width = width; canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    finalBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    document.getElementById('img-preview').src = finalBase64;
-                    document.getElementById('img-preview').classList.remove('hidden');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-
-        async function saveLog() { 
-            const v = document.getElementById('log-val').value; 
-            const n = document.getElementById('log-note').value; 
-            
-            if(!finalBase64 && !v && cType === 'صور') return Swal.fire('تنبيه', 'برجاء التقاط صورة أولاً', 'warning');
-            
-            Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-            
-            try {
-                await db.collection('logs').add({ 
-                    uName: currentUser.name, 
-                    uPhone: currentUser.phone, 
-                    type: cType, 
-                    sub: cSub, 
-                    val: cType === 'صور' ? finalBase64 : v, 
-                    note: n, 
-                    ts: firebase.firestore.FieldValue.serverTimestamp() 
-                }); 
-                
-                if(currentUser.phone !== ADMIN_PHONE) {
-                    sendNotificationTo(ADMIN_PHONE, "سجل جديد 📝", `البطل ${currentUser.name} أضاف ${cType} جديد للسجل الخاص به.`);
-                }
-                
-                closeLogger(); 
-                Swal.close();
-                loadUserLogs(); 
-            } catch(e) {
-                Swal.fire('خطأ', 'فشل الحفظ: ' + e.message, 'error');
-            }
-        }
-
-        async function saveExpiryDate() {
-            const date = document.getElementById('admin-expiry-date').value;
-            if(!date) return Swal.fire('خطأ', 'برجاء اختيار التاريخ أولاً', 'error');
-            await db.collection('users').doc(activeTarget).update({ expiryDate: date });
-            Swal.fire('تم!', 'تم تحديث تاريخ انتهاء الاشتراك بنجاح', 'success');
-            loadAdmin(); // لتحديث لوحة الإحصائيات فوراً
-        }
-        function closeLogger() { document.getElementById('logger-modal').classList.add('hidden'); }
-        function openWorkoutTable(s){ 
-            document.getElementById('workout-table-title').innerText = "تمارين " + s; 
-            document.getElementById('exercise-rows').innerHTML=""; 
-            addExerciseRow(); 
-            document.getElementById('workout-table-modal').classList.remove('hidden'); 
-        }
-        function addExerciseRow(){ 
-            const container = document.getElementById('exercise-rows');
-            const card = document.createElement('div');
-            card.className = "workout-card-input";
-            card.style = "background:#161616; border:1px solid #333; border-radius:20px; padding:20px; position:relative; margin-bottom:20px; border-top:4px solid var(--primary);";
-            card.innerHTML = `
-                <div style="position:absolute; left:12px; top:12px; color:#ff3b30; cursor:pointer; font-size:24px;" onclick="this.parentElement.remove()">🗑️</div>
-                <div style="margin-bottom:20px;">
-                    <label style="color:var(--primary); font-weight:bold;">اسم التمرين</label>
-                    <input type="text" class="ex-name" placeholder="مثلاً: بنج عالي بالدبل" style="font-size:18px !important; text-align:right !important;">
-                </div>
-                <div style="margin-bottom:15px; width:100px;"><label>المجموعات</label><input type="number" class="ex-sets" value="4"></div>
-                
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; background:#000; padding:15px; border-radius:15px; border:1px solid #222;">
-                    ${[1,2,3,4,5,6].map(n => `
-                        <div style="border-bottom:1px solid #222; padding-bottom:8px;">
-                            <label style="font-size:8px; text-align:center;">مجموعة ${n}</label>
-                            <input type="text" class="w${n}" placeholder="وزن" style="padding:6px !important; font-size:12px !important; margin-bottom:5px;">
-                            <input type="text" class="r${n}" placeholder="عدات" style="padding:6px !important; font-size:12px !important; border-color:var(--success) !important;">
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            container.appendChild(card);
-        }
-        async function saveWorkoutTable(){ 
-            const cards = document.querySelectorAll('.workout-card-input'); 
-            let exs = []; 
-            cards.forEach(card => { 
-                const name = card.querySelector('.ex-name').value;
-                if(name){ 
-                    let data = { name, sets: card.querySelector('.ex-sets').value, w:[], r:[] };
-                    for(let i=1; i<=6; i++){ 
-                        data.w.push(card.querySelector('.w'+i).value || "-"); 
-                        data.r.push(card.querySelector('.r'+i).value || "-"); 
-                    }
-                    exs.push(data);
-                }
-            });
-            if(exs.length > 0){ 
-                await db.collection('logs').add({ uName:currentUser.name, uPhone:currentUser.phone, type:'تمرين', sub:cSub, val:JSON.stringify(exs), ts:firebase.firestore.FieldValue.serverTimestamp() }); 
-                if(currentUser.phone !== ADMIN_PHONE) sendNotificationTo(ADMIN_PHONE, "تمرين مكتمل بالكامل! 💪", `البطل ${currentUser.name} أنهى تمرين الدبابة (${cSub})!`);
-            }
-            document.getElementById('workout-table-modal').classList.add('hidden'); 
-            loadUserLogs(); 
-        }
-
-        async function loadUserLogs() { await fetchAndRenderLogs(currentUser.phone, 'user-history-list'); }
-
-        async function viewSelectedUserLogs() {
-            const container = document.getElementById('selected-user-history');
-            const targetId = document.getElementById('profile-modal').dataset.activeId || activeTarget;
-            if(!targetId) return;
-
-            if(container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                await fetchAndRenderLogs(targetId, 'target-history-list', true);
-                container.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        async function fetchAndRenderLogs(phone, containerId, isAdminView = false) {
-            const list = document.getElementById(containerId);
-            if(!list) return;
-            
-            const snap = await db.collection('logs').where('uPhone', '==', phone).get();
-            let arr = []; snap.forEach(d => arr.push({id: d.id, ...d.data()})); 
-            arr.sort((a,b) => (b.ts?.seconds||0) - (a.ts?.seconds||0));
-            
-            let groups = new Map(); 
-            arr.forEach(d => { 
-                const ds = d.ts ? d.ts.toDate().toLocaleDateString('ar-EG', {day:'numeric', month:'long'}) : 'اليوم'; 
-                if(!groups.has(ds)) groups.set(ds, []);
-                groups.get(ds).push(d);
-            });
-
-            let h = "";
-            let monthGroups = new Map();
-
-            // توزيع الداتا على شهور
-            groups.forEach((logs, dateStr) => {
-                const firstLogTs = logs[0].ts?.toDate() || new Date();
-                const monthYear = firstLogTs.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
-                if(!monthGroups.has(monthYear)) monthGroups.set(monthYear, []);
-                monthGroups.get(monthYear).push({ date: dateStr, logs: logs });
-            });
-
-            monthGroups.forEach((days, monthName) => {
-                const monthId = "m_" + monthName.replace(/\s/g, '_');
-                h += `
-                <div class="month-section" style="margin-bottom:20px; border:1px solid #222; border-radius:20px; overflow:hidden; background:rgba(0,0,0,0.2);">
-                    <div onclick="toggleCollapse('${monthId}')" style="background:#111; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; color:var(--accent);">
-                        <b style="font-size:16px;">🗓️ ${monthName}</b>
-                        <span id="arr_${monthId}" style="transition:0.3s; font-size:12px;">▼</span>
-                    </div>
-                    <div id="${monthId}" style="padding:10px;">`;
-
-                days.forEach(day => {
-                    const dayId = "d_" + (day.date + monthName).replace(/\s/g, '_');
-                    h += `
-                    <div class="day-section" style="margin-bottom:15px; border-bottom:1px solid #222; padding-bottom:10px;">
-                        <div onclick="toggleCollapse('${dayId}')" style="color:#666; font-size:12px; text-align:center; display:flex; align-items:center; gap:15px; margin:15px 0; cursor:pointer;">
-                            <span style="flex:1; height:1px; background:#222;"></span> 
-                            <span>📅 ${day.date}</span> 
-                            <span id="arr_${dayId}" style="transition:0.3s; font-size:10px;">▼</span>
-                            <span style="flex:1; height:1px; background:#222;"></span>
-                        </div>
-                        <div id="${dayId}">`;
-
-                    day.logs.forEach(d => {
-                        let icon = '🔥', color = 'var(--primary)', valHtml = d.val;
-                        if(d.type==='تمرين') { icon='💪'; color='var(--primary)'; } else if(d.type==='مياه') { icon='💧'; color='#2196f3'; } else if(d.type==='وزن') { icon='⚖️'; color='var(--accent)'; }
-                        
-                        // معالجة عرض التمارين (الجدول)
-                        if(d.type === 'تمرين' && d.val.startsWith('[')) {
-                            try {
-                                const exs = JSON.parse(d.val); 
-                                valHtml = `
-                                    <div style="overflow-x:auto; background:rgba(0,0,0,0.3); border-radius:15px; border:1px solid #222; margin-top:15px; -webkit-overflow-scrolling: touch;">
-                                        <table style="width:100%; border-collapse:collapse; text-align:center; min-width:400px; font-size:11px;">
-                                            <thead>
-                                                <tr style="background:#111; color:#777;">
-                                                    <th style="padding:10px; border:1px solid #222; position:sticky; right:0; background:#111; z-index:2;">التمرين</th>
-                                                    <th style="padding:10px; border:1px solid #222;">نوع</th>
-                                                    ${[1,2,3,4,5,6].map(n => `<th style="padding:10px; border:1px solid #222;">${n}</th>`).join('')}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                ${exs.map(ex => `
-                                                    <tr style="border-top:2px solid #222;">
-                                                        <td rowspan="2" style="padding:10px; border:1px solid #222; position:sticky; right:0; background:#0a0a0a; color:var(--primary); font-weight:bold; z-index:2;">
-                                                            ${ex.name}
-                                                            <div style="font-size:8px; color:#555; font-weight:normal; margin-top:4px; display:block;">🕒 ${ex.time || '--:--'}</div>
-                                                        </td>
-                                                        <td style="padding:5px; border:1px solid #222; color:var(--accent); background:rgba(255,215,0,0.05);">وزن</td>
-                                                        ${[0,1,2,3,4,5].map(idx => `<td style="padding:5px; border:1px solid #222; color:var(--accent); font-weight:bold;">${(ex.w && ex.w[idx]) || ex['w'+(idx+1)] || '-'}</td>`).join('')}
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="padding:5px; border:1px solid #222; color:var(--success); background:rgba(76,175,80,0.05);">عدة</td>
-                                                        ${[0,1,2,3,4,5].map(idx => `<td style="padding:5px; border:1px solid #222; color:var(--success); font-weight:bold;">${(ex.r && ex.r[idx]) || ex['r'+(idx+1)] || '-'}</td>`).join('')}
-                                                    </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                `; 
-                            } catch(e){ valHtml = d.val; } 
-                        }
-                        
-                        h += `
-                        <div class="history-item">
-                            ${(isAdminView || d.uPhone === currentUser.phone) ? `<i class="del-btn" onclick="deleteLog('${d.id}', '${phone}', '${containerId}')">🗑️</i>` : ''}
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                                <div style="width:50px; height:50px; background:rgba(255,255,255,0.05); border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:24px;">${icon}</div>
-                                <div>
-                                    <b style="color:${color}; font-size:17px;">${d.type} ${d.sub||''}</b>
-                                    <div style="font-size:11px; color:#555;">${d.ts ? d.ts.toDate().toLocaleTimeString('ar-EG',{hour:'2-digit', minute:'2-digit'}) : ''}</div>
-                                </div>
-                            </div>
-                            <div style="color:#eee; line-height:1.5;">${valHtml}</div>
-                            ${d.note ? `<div style='margin-top:12px; padding:10px; background:rgba(0,0,0,0.3); border-radius:10px; font-size:12px; color:#aaa; font-style:italic;'>💬 ${d.note}</div>` : ''}
-                        </div>`;
-                    });
-                    h += `</div></div>`; // إغلاق اليوم
-                });
-                h += `</div></div>`; // إغلاق الشهر
-            });
-            list.innerHTML = h || '<p style="text-align:center; padding:50px; color:#444;">مفيش نشاط مسجل لسه.. ابدأ يا بطل!</p>';
-        }
-
-        async function deleteLog(id, phone, containerId){ if(confirm('حذف؟')){ await db.collection('logs').doc(id).delete(); fetchAndRenderLogs(phone || currentUser.phone, containerId || 'user-history-list'); } }
-
-        // Admin Functions
-        // دالة تحميل بيانات الأدمن
-        async function loadAdmin() {
-            const list = document.getElementById('all-users-list');
-            const snap = await db.collection('users').orderBy('name').get();
-            allUsersData = []; 
-            let total = 0, active = 0, vip = 0, expired = 0;
-            const now = new Date();
-
-            snap.forEach(d => {
-                const u = d.data();
-                allUsersData.push({id: d.id, ...u});
-                
-                if(u.status === 'approved') {
-                    total++;
-                    if(u.isVIP || (u.goal && u.goal.includes('VIP'))) vip++;
-                    
-                    const exp = u.expiryDate ? new Date(u.expiryDate) : null;
-                    if(exp && exp > now) active++; else expired++;
-                }
-            });
-
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-active').innerText = active;
-            document.getElementById('stat-vip').innerText = vip;
-            
-            updateAdminStatsChart(active, expired, vip);
-            filterAdminUsers('all'); 
-
-            const pSnap = await db.collection('users').where('status','==','pending').get();
-            let ph = ""; 
-            pSnap.forEach(d => { 
-                const u = d.data();
-                ph += `
-                <div class="card" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02);">
-                    <div>
-                        <b style="color:#fff;">${u.name}</b>
-                        <div style="font-size:10px; color:var(--accent);">${u.goal || 'بطل جديد'}</div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button onclick="openProfile('${d.id}')" style="background:#222; border:1px solid #444; color:#fff; padding:8px 12px; border-radius:12px; font-size:11px; cursor:pointer;">تجهيز البطل ✍️</button>
-                        <button onclick="approveUser('${d.id}')" style="background:var(--success); color:#000; border:none; padding:8px 15px; border-radius:12px; font-weight:bold; font-size:11px; cursor:pointer;">تفعيل ✅</button>
-                    </div>
-                </div>`; 
-            });
-            document.getElementById('pending-users-list').innerHTML = ph || '<p style="text-align:center; padding:20px; color:#444; font-size:13px;">لا توجد طلبات معلقة حالياً.. الجيم هادئ ومستقر 🧘‍♂️</p>';
-            
-            // جلب طلبات تغيير النظام
-            const gSnap = await db.collection('users').where('pendingGoal', '!=', null).get();
-            const gCard = document.getElementById('goal-change-requests-card');
-            const gList = document.getElementById('goal-change-list');
-            let gh = "";
-            let hasRequests = false;
-
-            gSnap.forEach(d => {
-                const u = d.data();
-                // التأكد أن الـ pendingGoal ليس هو الهدف الحالي فعلاً
-                if (u.pendingGoal && u.pendingGoal !== u.goal) {
-                    hasRequests = true;
-                    gh += `
-                    <div class="card" style="background:rgba(255,179,0,0.02); border:1px solid rgba(255,179,0,0.2); display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:15px;">
-                        <div style="flex:1;">
-                            <b style="color:#fff; font-size:16px;">${u.name}</b>
-                            <div style="font-size:11px; color:#aaa; margin-top:4px;">
-                                النظام الحالي: <span style="color:#888;">${u.goal}</span> ➡️ <span style="color:var(--accent); font-weight:bold;">${u.pendingGoal}</span>
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button onclick="approveGoalChange('${d.id}', '${u.pendingGoal}')" style="background:var(--success); color:#000; border:none; padding:8px 15px; border-radius:12px; font-weight:bold; font-size:11px; cursor:pointer;">موافقة ✅</button>
-                            <button onclick="rejectGoalChange('${d.id}')" style="background:rgba(255,59,48,0.1); color:#ff3b30; border:1px solid #ff3b30; padding:8px 15px; border-radius:12px; font-weight:bold; font-size:11px; cursor:pointer;">رفض ❌</button>
-                        </div>
-                    </div>`;
-                }
-            });
-            gList.innerHTML = gh;
-            gCard.style.display = hasRequests ? 'block' : 'none';
-
-            // تحميل بنك المعلومات للأدمن
-            loadKnowledgeAdmin();
-        }
-
-        // دالة الفلترة وتنسيق القائمة (لإظهار الأسماء بوضوح)
-        function filterAdminUsers(goal) {
-            const list = document.getElementById('all-users-list');
-            const btns = document.querySelectorAll('#admin-user-filters button');
-            btns.forEach(b => b.style.background = "#222");
-
-            let filtered = allUsersData.filter(u => u.status === 'approved');
-            if(goal !== 'all') {
-                filtered = filtered.filter(u => u.goal === goal);
-                const activeBtn = Array.from(btns).find(b => b.innerText.includes(goal.replace('نظام ', '')));
-                if(activeBtn) activeBtn.style.background = "var(--primary)";
-            } else { btns[0].style.background = "var(--primary)"; }
-
-            list.innerHTML = filtered.map(u => {
-                const now = new Date();
-                const exp = u.expiryDate ? new Date(u.expiryDate) : null;
-                const isActive = exp && exp > now;
-                const isVIP = u.isVIP || (u.goal && u.goal.includes('VIP'));
-
-                return `
-                <div style="margin-bottom:12px; display:flex; gap:10px;">
-                    <button class="track-btn" style="flex:1; text-align:right; background:rgba(26,26,26,0.8); border:1px solid ${isActive ? 'var(--success)' : '#441111'}; border-right:5px solid ${isVIP ? 'var(--accent)' : (isActive ? 'var(--success)' : 'var(--primary)')}; padding:18px; border-radius:15px;" onclick="openProfile('${u.id}')">
-                        <b style="color:#fff; font-size:17px; display:block; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${u.name} ${isVIP ? '👑' : ''}</b>
-                        <small style="color:${isActive ? 'var(--success)' : '#888'}; font-weight:bold;">${isActive ? 'نشط' : 'منتهي'} | ${u.goal || ''}</small>
-                    </button>
-                    <button onclick="activeTarget='${u.id}'; viewSelectedUserLogs()" style="background:#222; border:1px solid #333; border-radius:15px; padding:0 15px; color:var(--accent); font-size:20px;">📜</button>
-                </div>
-            `}).join('') || '<p style="text-align:center; padding:20px; color:#555;">مفيش أبطال هنا لسه.</p>';
-        }
-
-        let statsChart = null;
-        function updateAdminStatsChart(active, expired, vip) {
-            const ctx = document.getElementById('adminStatsChart').getContext('2d');
-            if(statsChart) statsChart.destroy();
-            
-            statsChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['نشط', 'منتهي', 'VIP'],
-                    datasets: [{
-                        data: [active, expired, vip],
-                        backgroundColor: ['#4cd964', '#ff3b30', '#ffcc00'],
-                        borderWidth: 0,
-                        hoverOffset: 15
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#888', font: { family: 'Cairo', size: 10 } } }
-                    },
-                    cutout: '75%'
-                }
-            });
-        }
-
-        async function openProfile(id) { 
-            activeTarget = id;
-            document.getElementById('profile-modal').dataset.activeId = id; 
-            
-            Swal.fire({ title: 'جاري تحميل الملف...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-            
-            try {
-                const d = await db.collection('users').doc(id).get(); 
-                if (!d.exists) throw new Error("المشترك غير موجود");
-                const data = d.data(); 
-                Swal.close();
-
-                document.getElementById('prof-name').innerText = data.name; 
-                document.getElementById('prof-sub-header').innerText = `${data.goal} | ${data.phone}`;
-                document.getElementById('prof-bio-strip').innerText = `🎂 ${data.age || '--'} سنة | 📏 ${data.height || '--'} سم | ⚖️ ${data.weight || '--'} كجم`;
-                document.getElementById('admin-captain-notes').value = data.captainNotes || "";
-                document.getElementById('admin-reset-pass').value = "";
-                document.getElementById('admin-expiry-date').value = data.expiryDate || "";
-                
-                // عرض تفضيلات الأكل للكابتن
-                const prefsBox = document.getElementById('admin-food-prefs-box');
-                const prefsDiv = document.getElementById('admin-food-prefs');
-                const prefs = data.foodPrefs || [];
-                if(prefs.length > 0) {
-                    prefsBox.classList.remove('hidden');
-                    prefsDiv.innerHTML = prefs.map(p => `
-                        <div style="background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:10px; margin-bottom:5px; border-right:3px solid ${p.status==='like'?'#4caf50':'#ff3b30'}; display:flex; justify-content:space-between;">
-                            <span>${p.name}</span>
-                            <span>${p.status==='like'?'❤️':'💔'}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    prefsBox.classList.add('hidden');
-                }
-
-                document.getElementById('profile-modal').classList.remove('hidden'); 
-                currentPlanData = data.workoutPlan || {};
-                
-                const goal = data.goal || "";
-                const isVIP = goal.includes('VIP');
-                const isTraining = goal.includes('تدريب');
-                const isNutri = goal.includes('تغذيه');
-
-                document.getElementById('admin-workout-section').classList.toggle('hidden', isNutri && !isVIP);
-                document.getElementById('admin-nutri-section').classList.toggle('hidden', isTraining && !isVIP);
-
-                document.getElementById('admin-plan-cats-workout').innerHTML = PLAN_CATS.map(c => `<button class="sub-btn" style="background:#111; color:#ff3b30; border:1px solid #333;" onclick="editAdminPlan('${c}')">${c}</button>`).join('');
-                document.getElementById('admin-plan-cats-nutri').innerHTML = NUTRI_CATS.map(c => `<button class="sub-btn" style="background:#111; color:#4caf50; border:1px solid #333;" onclick="editAdminPlan('${c}')">${c}</button>`).join('');
-                
-                document.getElementById('admin-plan-editor').classList.add('hidden');
-                document.getElementById('selected-user-history').classList.add('hidden');
-            } catch(e) {
-                Swal.fire('خطأ', 'فشل في تحميل البيانات: ' + e.message, 'error');
-            }
-        }
-
-        async function saveCaptainNotes() {
-            const notes = document.getElementById('admin-captain-notes').value;
-            const targetId = document.getElementById('profile-modal').dataset.activeId || activeTarget;
-            await db.collection('users').doc(targetId).update({ captainNotes: notes });
-            Swal.fire({ title: 'تم الإرسال!', text: 'الملاحظة هتظهر للبطل فوراً على شاشته 🔥', icon: 'success', background: '#1e1e1e', color: '#fff' });
-        }
-
-        async function resetUserPass() {
-            const newPass = document.getElementById('admin-reset-pass').value.trim();
-            const targetId = document.getElementById('profile-modal').dataset.activeId || activeTarget;
-            if(!newPass) return Swal.fire('خطأ', 'اكتب كلمة السر الجديدة الأول يا كوتش', 'error');
-            await db.collection('users').doc(targetId).update({ password: newPass });
-            Swal.fire({ title: 'تم التغيير!', text: 'كلمة السر الجديدة بقت فعالة دلوقتي 🗝️', icon: 'success', background: '#1e1e1e', color: '#fff' });
-            document.getElementById('admin-reset-pass').value = "";
-        }
-
-
-        function editAdminPlan(cat) {
-            editingCat = cat;
-            document.getElementById('admin-plan-editor').classList.remove('hidden');
-            document.getElementById('editing-cat-name').innerText = "تعديل: " + cat;
-            const container = document.getElementById('admin-plan-rows');
-            container.innerHTML = "";
-            const exs = currentPlanData[cat] || [];
-            exs.forEach(ex => addAdminPlanRow(ex));
-            if(exs.length === 0) addAdminPlanRow();
-            document.getElementById('admin-plan-editor').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function addAdminPlanRow(d = {}) {
-            const container = document.getElementById('admin-plan-rows');
-            const card = document.createElement('div');
-            card.className = "plan-edit-card";
-            const isNutri = NUTRI_CATS.includes(editingCat);
-            
-            card.style = "background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:20px; padding:20px; position:relative; margin-bottom:20px; border-right:5px solid "+(isNutri?'#4caf50':'var(--primary)')+";";
-            
-            if(isNutri) {
-                // شكل التعديل لقسم التغذية
-                card.innerHTML = `
-                    <div style="position:absolute; left:12px; top:12px; color:#ff3b30; font-size:22px; cursor:pointer;" onclick="this.parentElement.remove()">🗑️</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:10px;">
-                        <div>
-                            <label style="display:block; color:#777; font-size:10px; margin-bottom:5px;">نوع الأكل 🍗</label>
-                            <input type="text" value="${d.name||''}" class="p-name" placeholder="مثلاً: صدور دجاج" style="width:100%; background:#111; border:1px solid #444; color:#fff; padding:10px; border-radius:10px; font-weight:bold; font-size:13px;">
-                        </div>
-                        <div>
-                            <label style="display:block; color:#777; font-size:10px; margin-bottom:5px;">التفاصيل 📝</label>
-                            <input type="text" value="${d.note||''}" class="p-note" placeholder="مثلاً: مسلوق/مشوي" style="width:100%; background:#111; border:1px solid #444; color:#aaa; padding:10px; border-radius:10px; font-size:13px;">
-                        </div>
-                        <div>
-                            <label style="display:block; color:#777; font-size:10px; margin-bottom:5px;">الكمية ⚖️</label>
-                            <input type="text" value="${d.weight||''}" class="p-weight" placeholder="مثلاً: 200 جرام" style="width:100%; background:#111; border:1px solid #444; color:var(--accent); padding:10px; border-radius:10px; font-weight:bold; font-size:13px;">
-                        </div>
-                    </div>`;
-            } else {
-                // شكل التعديل لقسم التمارين (النظام الحالي المطور)
-                card.innerHTML = `
-                    <div style="position:absolute; left:12px; top:12px; color:#ff3b30; font-size:22px; cursor:pointer;" onclick="this.parentElement.remove()">🗑️</div>
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; color:#777; font-size:11px; margin-bottom:5px;">اسم التمرين 💪</label>
-                        <input type="text" value="${d.name||''}" class="p-name" placeholder="بنج عالي.." style="width:100%; background:#111; border:1px solid #444; color:#fff; padding:12px; border-radius:12px; font-weight:bold;">
-                    </div>
-                    <div style="margin-bottom:10px; width:100px;"><label style="font-size:11px; color:#777;">المجموعات</label><input type="text" value="${d.sets||'4'}" class="p-sets" style="width:100%; background:#111; border:1px solid #444; color:var(--success); padding:8px; border-radius:10px; text-align:center;"></div>
-                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; background:#000; padding:12px; border-radius:15px; border:1px solid #222;">
-                        ${[1,2,3,4,5,6].map(n => `
-                            <div style="border-bottom:1px solid #222; padding-bottom:5px;">
-                                <label style="font-size:8px; display:block; text-align:center; color:#555;">مج ${n}</label>
-                                <input type="text" value="${d['w'+n]||''}" class="w${n}" placeholder="وزن" style="width:100%; padding:5px !important; font-size:11px !important; background:none !important; border:1px solid #333 !important; color:var(--accent) !important; margin-bottom:3px;">
-                                <input type="text" value="${d['r'+n]||''}" class="r${n}" placeholder="عدة" style="width:100%; padding:5px !important; font-size:11px !important; background:none !important; border:1px solid #333 !important; color:var(--success) !important;">
-                            </div>
-                        `).join('')}
-                    </div>`;
-            }
-            container.appendChild(card);
-        }
-
-        async function saveAdminPlan(ev) {
-            if(ev) ev.preventDefault();
-            const targetId = document.getElementById('profile-modal').dataset.activeId || activeTarget;
-            if(!targetId || !editingCat) return Swal.fire('نقص بيانات', 'برجاء اختيار القسم والمشترك', 'warning');
-
-            Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            try {
-                let exs = [];
-                document.querySelectorAll('.plan-edit-card').forEach(card => {
-                    const name = card.querySelector('.p-name').value.trim();
-                    if(name) {
-                        const isNutri = NUTRI_CATS.includes(editingCat);
-                        let row = { name, done: false };
-                        if(isNutri) {
-                            row.note = card.querySelector('.p-note').value.trim();
-                            row.weight = card.querySelector('.p-weight').value.trim();
-                        } else {
-                            row.sets = card.querySelector('.p-sets').value || "4";
-                            for(let i=1; i<=6; i++) { 
-                                row['w'+i] = card.querySelector('.w'+i).value || ""; 
-                                row['r'+i] = card.querySelector('.r'+i).value || ""; 
-                            }
-                        }
-                        exs.push(row);
-                    }
-                });
-                currentPlanData[editingCat] = exs;
-                await db.collection('users').doc(targetId).update({ workoutPlan: currentPlanData });
-                sendNotificationTo(targetId, "تحديث من الكابتن 🔥", `تم إعداد وتحديث جدولك لقسم: ${editingCat}`);
-                Swal.fire({ title: 'تم الحفظ بنجاح! ✅', text: `تم تحديث قسم (${editingCat})`, icon: 'success', background: '#1e1e1e', color: '#fff', timer: 1500 });
-            } catch(e) { Swal.fire('فشل الحفظ ❌', e.message, 'error'); }
-        }
-
-        async function approveUser(id){ await db.collection('users').doc(id).update({status:'approved'}); loadAdmin(); }
-        async function deleteUser(){ 
-            if(confirm('هل أنت متأكد من حذف هذا البطل نهائياً؟ ⚠️')){ 
-                Swal.fire({ title: 'جاري الحذف...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                try {
-                    await db.collection('users').doc(activeTarget).delete(); 
-                    document.getElementById('profile-modal').classList.add('hidden');
-                    Swal.fire({ title: 'تم الحذف!', text: 'تم مسح المشترك بنجاح، واللوحة هتتحدث دلوقتي 🔥', icon: 'success', timer: 1500, background: '#1e1e1e', color: '#fff' });
-                    loadAdmin(); 
-                } catch(e) {
-                    Swal.fire('خطأ', 'فشل في الحذف: ' + e.message, 'error');
-                }
-            } 
-        }
-
-        // Utilities
-        function toggleAuth(m) { document.getElementById('login-form').classList.toggle('hidden', m==='register'); document.getElementById('register-form').classList.toggle('hidden', m==='login'); }
-        function toggleMoreMenu() {
-            const overlay = document.getElementById('more-menu-overlay');
-            const content = document.getElementById('more-menu-content');
-            if(overlay.classList.contains('hidden')) {
-                overlay.classList.remove('hidden');
-                setTimeout(() => { content.style.bottom = '90px'; }, 10);
-            } else {
-                content.style.bottom = '-100%';
-                setTimeout(() => { overlay.classList.add('hidden'); }, 300);
-            }
-        }
-
-        function switchTab(t, el) { 
-            document.querySelectorAll('.content-tab').forEach(c => c.classList.add('hidden')); 
-            document.getElementById(t+'-tab').classList.remove('hidden'); 
-            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); 
-            
-            if(el) el.classList.add('active');
-            else {
-                // إذا تم الاستدعاء من قائمة "المزيد"، ننشط زرار المزيد في الشريط السفلي
-                document.getElementById('more-nav').classList.add('active');
-            }
-            
-            if(t==='history') loadUserLogs(); 
-            if(t==='technique') loadTechniques();
-            if(t==='eval') {
-                document.getElementById('eval-hero-name').innerText = currentUser.name;
-                document.getElementById('eval-last-weight').innerText = (currentUser.weight || '--') + ' كجم';
-                loadEvaluationData();
-            }
-        }
-        function toggleCollapse(id) {
-            const el = document.getElementById(id);
-            const arr = document.getElementById('arr_'+id);
-            if(el.classList.contains('hidden')) {
-                el.classList.remove('hidden');
-                if(arr) arr.style.transform = 'rotate(0deg)';
-            } else {
-                el.classList.add('hidden');
-                if(arr) arr.style.transform = 'rotate(-90deg)';
-            }
-        }
-        function logout() { localStorage.removeItem('fire_gym_phone'); location.reload(); }
-        function checkWaterReset() { const d = new Date().toDateString(); if(localStorage.getItem('w_date') !== d){ localStorage.setItem('w_date', d); localStorage.setItem('w_count', "0"); } document.getElementById('water-count').innerText = localStorage.getItem('w_count') || "0"; }
-        async function updateWater(v) { 
-            let c = parseInt(localStorage.getItem('w_count')||"0")+v; 
-            localStorage.setItem('w_count', c); 
-            document.getElementById('water-count').innerText = c; 
-
-            // دمج المياه في كارت واحد يومي باستخدام ID فريد
-            const todayStr = new Date().toISOString().split('T')[0];
-            const dailyWaterId = `water_${currentUser.phone}_${todayStr}`;
-
-            try {
-                await db.collection('logs').doc(dailyWaterId).set({ 
-                    uPhone: currentUser.phone, 
-                    type: 'مياه', 
-                    val: c + ' كوب', 
-                    ts: firebase.firestore.FieldValue.serverTimestamp() 
-                }, { merge: true });
-                loadUserLogs();
-            } catch(e) { 
-                console.error("Water Final Fix Error:", e);
-                await db.collection('logs').add({ 
-                    uPhone: currentUser.phone, type: 'مياه', val: c + ' كوب', ts: firebase.firestore.FieldValue.serverTimestamp() 
-                });
-                loadUserLogs();
-            }
-        }
-
-        // --- 🔔 نظام الإشعارات الذكي (Smart System Notifications) ---
-        let notifListener = null;
-        let unreadNotifs = 0;
-
-        function initSystemNotifications() {
-            if (!("Notification" in window)) {
-                console.warn("المتصفح لا يدعم الإشعارات");
-                return;
-            }
-            if (Notification.permission === "granted") {
-                startWaterInterval();
-                listenForCustomNotifications();
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(p => { 
-                    if (p === "granted") {
-                        startWaterInterval(); 
-                        listenForCustomNotifications();
-                    } else {
-                        Swal.fire({
-                            title: 'تحذير هام ⚠️', 
-                            text: 'الأبلكيشن محتاج إذن الإشعارات عشان يفكرك بالمياه وأوقات التمرين، وعشان يوصلك رسائل الكابتن بسرعة. برجاء تفعيله من إعدادات المتصفح.',
-                            icon: 'warning'
-                        });
-                    }
-                });
-            } else {
-                Swal.fire('تنبيه الإشعارات 🔔', 'الإشعارات مقفولة من إعدادات تليفونك.. افتحها لتجربة أفضل!', 'info');
-                listenForCustomNotifications(); // استماع داخلي حتى لو مفيش Permission للهاتف
-            }
-        }
-
-        async function openNotifModal() {
-            document.getElementById('notif-modal').classList.remove('hidden');
-            unreadNotifs = 0;
-            updateNotifBadge();
-            loadNotifList();
-        }
-
-        function closeNotifModal() {
-            document.getElementById('notif-modal').classList.add('hidden');
-        }
-
-        function updateNotifBadge() {
-            const badge = document.getElementById('notif-badge');
-            const adminBadge = document.getElementById('notif-badge-admin');
-            const countText = unreadNotifs > 9 ? "+9" : unreadNotifs;
-            
-            if (unreadNotifs > 0) {
-                if(badge) { badge.innerText = countText; badge.classList.remove('hidden'); }
-                if(adminBadge) { adminBadge.innerText = countText; adminBadge.classList.remove('hidden'); }
-            } else {
-                if(badge) badge.classList.add('hidden');
-                if(adminBadge) adminBadge.classList.add('hidden');
-            }
-        }
-
-        async function loadNotifList() {
-            const list = document.getElementById('notif-list');
-            list.innerHTML = '<p style="text-align:center; color:#555;">جاري تحميل الرسائل... 🛡️</p>';
-            try {
-                // شلنا الـ orderBy من الكود عشان ميطلبش Index ويطلع خطأ
-                const snap = await db.collection('notifications')
-                    .where('targetPhone', '==', currentUser.phone)
-                    .limit(30)
-                    .get();
-                
-                let results = [];
-                snap.forEach(doc => results.push(doc.data()));
-                
-                // بنرتب هنا فى الكود نفسه (الأحدث فوق)
-                results.sort((a, b) => (b.ts?.seconds || 0) - (a.ts?.seconds || 0));
-
-                let h = "";
-                results.forEach(d => {
-                    const date = d.ts ? d.ts.toDate().toLocaleString('ar-EG', {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short'}) : 'الآن';
-                    h += `
-                    <div style="background:rgba(255,255,255,0.03); border:1px solid #222; border-radius:15px; padding:15px;">
-                        <b style="color:var(--accent); display:block; margin-bottom:5px; font-size:14px;">${d.title}</b>
-                        <p style="color:#eee; font-size:13px; margin:0; line-height:1.5;">${d.message}</p>
-                        <small style="color:#555; display:block; margin-top:8px; font-size:10px;">${date}</small>
-                    </div>`;
-                });
-                list.innerHTML = h || '<p style="text-align:center; color:#444; padding:20px;">لا توجد رسائل حالياً.. أنت تتبع الجدول بامتياز!</p>';
-            } catch(e) { console.error("Notif Load Error:", e); list.innerHTML = '<p style="text-align:center; color:#ff3b30; padding:20px;">عذراً، فشل التحميل.. تأكد من الإنترنت ❌</p>'; }
-        }
-
-        function listenForCustomNotifications() {
-            if(!currentUser || !currentUser.phone) return;
-            if(notifListener) notifListener();
-
-            const startTs = firebase.firestore.Timestamp.now();
-            notifListener = db.collection('notifications')
-                .where('targetPhone', '==', currentUser.phone)
-                .where('ts', '>', startTs)
-                .onSnapshot(snap => {
-                    snap.docChanges().forEach(change => {
-                        if (change.type === 'added') {
-                            const d = change.doc.data();
-                            unreadNotifs++;
-                            updateNotifBadge();
-                            showPhoneNotification(d.title, d.message);
-                            
-                            // توست تنبيه صغير
-                            Swal.fire({
-                                toast: true, position: 'top-start',
-                                icon: 'info', title: d.title,
-                                text: d.message,
-                                showConfirmButton: false, timer: 4000,
-                                background: '#1a1a1a', color: '#fff'
-                            });
-                        }
-                    });
-                });
-        }
-
-        function showPhoneNotification(title, body) {
-            if (Notification.permission === "granted") {
-                new Notification(title, { 
-                    body: body, 
-                    icon: "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
-                    vibrate: [200, 100, 200]
-                });
-            }
-        }
-
-        // دالة موحدة لإرسال الإشعار للكابتن أو المشترك
-        async function sendNotificationTo(phone, title, message) {
-            try {
-                await db.collection('notifications').add({
-                    targetPhone: phone,
-                    title: title,
-                    message: message,
-                    ts: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch(e) { console.error("إرسال الإشعار فشل:", e); }
-        }
-
-        function startWaterInterval() {
-            setInterval(() => {
-                const msgs = ["اشرب مياه يا بطل! 🔥💧", "متنساش المياه! 💪🧊", "كوباية مياه دلوقتي هتفرق! 🏆💧", "المياه هي وقود الجسم! 🚀🌊"];
-                new Notification("Fire Gym 💎 تذكير مياه", { body: msgs[Math.floor(Math.random()*msgs.length)], icon: "https://cdn-icons-png.flaticon.com/512/3105/3105807.png" });
-            }, 15 * 60 * 1000); 
-        }
-        async function register() {
-            const n = document.getElementById('reg-name').value.trim();
-            const p = document.getElementById('reg-phone').value.trim();
-            const pass = document.getElementById('reg-pass').value.trim();
-            if(!n || !p || !pass) return Swal.fire('نقص بيانات', 'برجاء ملء كل الخانات يا بطل', 'warning');
-            
-            Swal.fire({ title: 'جاري إرسال طلبك...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-            
-            const data = { 
-                name: n, phone: p, age: document.getElementById('reg-age').value, 
-                height: document.getElementById('reg-height').value, weight: document.getElementById('reg-weight').value, 
-                fat: document.getElementById('reg-fat').value, goal: document.getElementById('reg-goal').value, 
-                password: pass, status: 'pending', workoutPlan: {}, ts: firebase.firestore.FieldValue.serverTimestamp() 
-            };
-            try {
-                await db.collection('users').doc(p).set(data);
-                Swal.close();
-                Swal.fire('تم بنجاح! 🔥', 'طلبك وصل للكابتن، أول ما يوافق هتقدر تدخل حسابك فوراً', 'success');
-                toggleAuth('login');
-            } catch(e) { Swal.close(); Swal.fire('خطأ', 'فشل إرسال الطلب، حاول تاني', 'error'); }
-        }
-
-        function startRestTimer(s) { document.getElementById('rest-timer-overlay').style.display='flex'; let r = s; document.getElementById('rest-seconds').innerText = r; restInterval = setInterval(()=> { r--; document.getElementById('rest-seconds').innerText = r; if(r<=0){ stopRestTimer(); } }, 1000); }
-        function stopRestTimer(){ clearInterval(restInterval); document.getElementById('rest-timer-overlay').style.display='none'; }
-
-        async function uploadMePhoto(el) { 
-            const file = el.files[0]; if(!file) return; 
-            const b64 = await processImageFile(file, 400);
-            document.getElementById('me-photo').src = b64; 
-            await db.collection('users').doc(currentUser.phone).update({ photo: b64 }); 
-        }
-
-        async function processImageFile(file, maxWidth = 800) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const scale = maxWidth / img.width;
-                        canvas.width = maxWidth;
-                        canvas.height = img.height * scale;
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function handleImageProcessing(input) {
-            if (input.files && input.files[0]) {
-                document.getElementById('save-status').innerText = "⏳ جاري معالجة الصورة...";
-                finalBase64 = await processImageFile(input.files[0], 800);
-                document.getElementById('img-preview').src = finalBase64;
-                document.getElementById('img-preview').classList.remove('hidden');
-                document.getElementById('save-status').innerText = "✅ الصورة جاهزة للنشر!";
-            }
-        }
-        function editMyInfo() { const w = prompt('الوزن الجديد:'); const h = prompt('الطول الجديد:'); const f = prompt('نسبة الدهون الجديدة:'); if(w||h||f) { db.collection('users').doc(currentUser.phone).update({weight:w||currentUser.weight, height:h||currentUser.height, fat:f||currentUser.fat}).then(()=>location.reload()); } }
-        let recipeBase64 = "";
-        function processRecipeImg(input) { 
-            if (input.files[0]) { 
-                const reader = new FileReader(); 
-                reader.onload = (e) => { 
-                    const img = new Image(); 
-                    img.onload = () => { 
-                        const canvas = document.createElement('canvas'); 
-                        const ctx = canvas.getContext('2d'); 
-                        canvas.width = 600; canvas.height = (img.height / img.width) * 600; 
-                        ctx.drawImage(img, 0, 0, 600, canvas.height); 
-                        recipeBase64 = canvas.toDataURL('image/jpeg', 0.6); 
-                        document.getElementById('recipe-img-status').innerText = "✅ تم تجهيز الصورة بنجاح!"; 
-                    }; 
-                    img.src = e.target.result; 
-                }; 
-                reader.readAsDataURL(input.files[0]); 
-            } 
-        }
-
-        async function saveRecipe() {
-            const name = document.getElementById('recipe-name').value.trim();
-            const desc = document.getElementById('recipe-desc').value.trim();
-            if(!name || !desc || !recipeBase64) return Swal.fire('نقص بيانات', 'برجاء كتابة الاسم والوصف ورفع صورة الوجبة 🔥', 'warning');
-
-            Swal.fire({ title: 'جاري النشر...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            try {
-                await db.collection('recipes').add({
-                    name, desc, img: recipeBase64, ts: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                Swal.fire('تم النشر! 🔥', 'الوجبة بقت متاحة دلوقت لكل الأبطال', 'success');
-                document.getElementById('recipe-name').value = "";
-                document.getElementById('recipe-desc').value = "";
-                recipeBase64 = "";
-                document.getElementById('recipe-img-status').innerText = "";
-                loadRecipes();
-            } catch(e) { Swal.fire('خطأ', e.message, 'error'); }
-        }
-
-        async function loadRecipes() { 
-            const snap = await db.collection('recipes').orderBy('ts','desc').get(); 
-            let h = ""; 
-            const hidden = currentUser.hiddenRecipes || [];
-
-            snap.forEach(d => { 
-                const r = d.data(); 
-                const id = d.id; 
-                if(hidden.includes(id) && currentUser.role !== 'admin') return;
-                h += `
-                <div class="history-item" style="padding:0; overflow:hidden; position:relative; border:1px solid #222;">
-                    ${currentUser.role==='admin' ? 
-                        `<i onclick="deleteRecipe('${id}')" style="position:absolute; top:8px; left:8px; background:rgba(255,59,48,0.8); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; z-index:10; font-style:normal; box-shadow:0 2px 8px rgba(0,0,0,0.5);">🗑️</i>` : 
-                        `<i onclick="hideRecipe('${id}')" style="position:absolute; top:8px; left:8px; background:rgba(255,255,255,0.1); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; z-index:10; font-style:normal; backdrop-filter:blur(5px);">✕</i>`
-                    }
-                    <div style="height:120px; background:url('${r.img}') center/cover; cursor:pointer;" onclick="showRecipeDetail('${id}')"></div>
-                    <div style="padding:12px; text-align:center; background:#111; font-weight:bold; font-size:13px; color:#eee;">${r.name}</div>
-                </div>`; 
-            }); 
-            document.getElementById('recipes-gallery').innerHTML = h || '<p style="text-align:center; padding:30px; color:#555;">مفيش وصفات لسه.. انتظر مفاجآت الكوتش! 🔥</p>'; 
-        }
-
-        async function showRecipeDetail(id) {
-            const d = await db.collection('recipes').doc(id).get();
-            if(!d.exists) return;
-            const r = d.data();
-            document.getElementById('recipe-detail-img').style.backgroundImage = `url('${r.img}')`;
-            document.getElementById('recipe-detail-name').innerText = r.name;
-            document.getElementById('recipe-detail-desc').innerText = r.desc;
-            document.getElementById('recipe-detail-modal').classList.remove('hidden');
-        }
-
-        async function hideRecipe(id) {
-            if(!confirm('مش محتاج الوصفة دي في قائمتك؟')) return;
-            let hidden = currentUser.hiddenRecipes || [];
-            if(!hidden.includes(id)) {
-                hidden.push(id);
-                await db.collection('users').doc(currentUser.phone).update({ hiddenRecipes: hidden });
-                currentUser.hiddenRecipes = hidden;
-                loadRecipes();
-            }
-        }
-
-        async function deleteRecipe(id) {
-            if(!confirm('حذف هذه الوصفة نهائياً؟')) return;
-            try {
-                await db.collection('recipes').doc(id).delete();
-                loadRecipes();
-            } catch(e) { alert("خطأ في الحذف: " + e.message); }
-        }
-
-        async function seedInitialKnowledge() {
-            try {
-                const snap = await db.collection('knowledge_bank').get();
-                if(snap.empty) {
-                    const base = [
-                        { q: "ما هو أفضل تمرين لحرق الدهون؟", a: "المشي السريع أو الجري الخفيف لمدة 30-45 دقيقة بعد تمرين المقاومة، أو تمارين (HIIT) عالية الكثافة." },
-                        { q: "متى يجب تناول الكربوهيدرات؟", a: "الكربوهيدرات المعقدة (مثل البطاطا أو الشوفان) قبل التمرين بـ ساعتين لتعطيك طاقة مستدامة طوال الحصة." },
-                        { q: "كم كمية المياه التي أحتاجها؟", a: "كشخص رياضي تحتاج من 3.5 إلى 5 لتر مياه يومياً للحفاظ على الأداء البدني والكلى." }
-                    ];
-                    for(let item of base) {
-                        await db.collection('knowledge_bank').add({ ...item, ts: firebase.firestore.FieldValue.serverTimestamp() });
-                    }
-                }
-            } catch(e) { console.error("Seed KB Error:", e); }
-        }
-
-        async function forceSeedKnowledge() {
-            if(!confirm('هل تريد مسح المعلومات القديمة وتنزيل المعلومات الذهبية الجديدة؟')) return;
-            Swal.fire({ title: 'جاري التحديث الشامل...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-            try {
-                const snap = await db.collection('knowledge_bank').get();
-                const batch = db.batch();
-                snap.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-
-                const base = [
-                    { q: "ما هو الوقت المثالي لشرب البروتين؟", a: "بعد التمرين بـ 30-60 دقيقة هو أفضل وقت لامتصاص سريع، لكن الأهم هو إكمال حصتك اليومية كاملة." },
-                    { q: "هل الكارديو يحرق العضلات؟", a: "لا، الكارديو المعتدل يحسن الدورة الدموية ويساعد في نقل الغذاء للعضلات، المهم أن لا تبالغ فيه." },
-                    { q: "لماذا تشعر بالشد العضلي أحياناً؟", a: "نقص السوائل أو المعادن (بوتاسيوم، مغنسيوم). حافظ على توازن الأملاح في جسمك." },
-                    { q: "ما هي فوائد الكرياتين؟", a: "أكثر مكمل غذائي تمت دراسته؛ يزيد القوة، الانفجار البدني، ويحسن من شكل العضلة عن طريق تخزين المياه بداخلها." },
-                    { q: "سر الاستمرارية في الجيم؟", a: "أن تحب العملية وليس النتيجة فقط. ابدأ بأوزان مناسبة وتدرج ببطء لتتجنب الانقطاع أو الملل." }
-                ];
-                for(let item of base) {
-                    await db.collection('knowledge_bank').add({ ...item, ts: firebase.firestore.FieldValue.serverTimestamp() });
-                }
-                Swal.fire('تم بنجاح! ✅', 'بنك المعلومات جاهز للأبطال.', 'success');
-                loadKnowledgeAdmin();
-            } catch(e) { Swal.fire('خطأ', e.message, 'error'); }
-        }
-
-        async function loadTechniques() {
-            const list = document.getElementById('technique-list');
-            if(!list) return;
-            list.innerHTML = '<p style="text-align:center; color:#555;">جاري تحميل مكتبة التكنيك... 🎥</p>';
-            try {
-                const snap = await db.collection('techniques').orderBy('ts', 'desc').get();
-                let h = "";
-                const isAdmin = (currentUser && currentUser.role === 'admin');
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    h += `
-                    <div style="background:rgba(255,255,255,0.02); border:1px solid #222; border-radius:20px; padding:20px; position:relative;">
-                        ${isAdmin ? `<button onclick="deleteTechnique('${doc.id}')" style="position:absolute; top:15px; left:15px; background:rgba(255,59,48,0.2); color:#ff3b30; border:1px solid #ff3b30; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:bold;">حذف 🗑️</button>` : ''}
-                        <h4 style="color:#fff; margin-bottom:15px; font-size:18px;">${d.name}</h4>
-                        <div style="display:flex; gap:10px;">
-                            ${d.correctUrl ? `<a href="${d.correctUrl}" target="_blank" style="flex:1; text-align:center; padding:10px; background:rgba(76,175,80,0.1); color:var(--success); border:1px solid rgba(76,175,80,0.3); border-radius:10px; text-decoration:none; font-weight:bold; font-size:13px;">✅ الأداء الصحيح</a>` : ''}
-                            ${d.wrongUrl ? `<a href="${d.wrongUrl}" target="_blank" style="flex:1; text-align:center; padding:10px; background:rgba(255,59,48,0.1); color:#ff3b30; border:1px solid rgba(255,59,48,0.3); border-radius:10px; text-decoration:none; font-weight:bold; font-size:13px;">❌ شائع الخطأ</a>` : ''}
-                        </div>
-                    </div>`;
-                });
-                list.innerHTML = h || '<p style="text-align:center; color:#444; padding:20px;">انتظروا فيديوهات الكوتش قريباً! 🔥</p>';
-            } catch(e) { console.error("Tech Load Error:", e); }
-        }
-
-        async function saveTechnique() {
-            const name = document.getElementById('tech-name').value.trim();
-            const correctUrl = document.getElementById('tech-correct').value.trim();
-            const wrongUrl = document.getElementById('tech-wrong').value.trim();
-            if(!name) return Swal.fire('تنبيه', 'يجب إدخال اسم التمرين', 'warning');
-            Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            try {
-                await db.collection('techniques').add({ name, correctUrl, wrongUrl, ts: firebase.firestore.FieldValue.serverTimestamp() });
-                document.getElementById('tech-name').value = '';
-                document.getElementById('tech-correct').value = '';
-                document.getElementById('tech-wrong').value = '';
-                document.getElementById('technique-modal').classList.add('hidden');
-                Swal.fire('تم العظمة! 🔥', 'التكنيك نزل في المكتبة', 'success');
-                loadTechniques();
-            } catch(e) { Swal.fire('خطأ', e.message, 'error'); }
-        }
-
-        async function deleteTechnique(id) {
-            if(!confirm('حذف؟')) return;
-            try { await db.collection('techniques').doc(id).delete(); loadTechniques(); } catch(e) { alert(e.message); }
-        }
-
-        function logout() { localStorage.removeItem('fire_gym_phone'); location.reload(); }
-
-        window.onload = async () => { 
-            await seedInitialKnowledge(); 
-            const p = localStorage.getItem('fire_gym_phone'); 
-            if(p) db.collection('users').doc(p).get().then(s => s.exists?enterApp(s.data()):logout()).catch(() => logout()); 
-        };
-    </script>
 </body>
 </html>
