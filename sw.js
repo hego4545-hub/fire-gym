@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fire-gym-v7.0.1';
+const CACHE_NAME = 'fire-gym-v7.0.5';
 const ASSETS = [
   './',
   './index.html',
