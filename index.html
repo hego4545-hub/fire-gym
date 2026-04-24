@@ -870,7 +870,7 @@
                 <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
 
                 <div style="text-align:center; padding:10px;">
-                    <p style="font-size:10px; color:#999; margin:0;">Fire Gym Elite V.7.0.6</p>
+                    <p style="font-size:10px; color:#999; margin:0;">Fire Gym Elite V.7.0.7</p>
                 </div>
             </div>
         </div>
@@ -1140,14 +1140,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="scripts_bundle.js?v=7.0.6"></script>
+    <script src="scripts_bundle.js?v=7.0.7"></script>
 
     <!-- Full Screen Image Viewer (Fallback for Mobile) -->
-    <div id="full-screen-viewer" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:300000; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
-        <button onclick="closeFullViewer()" style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); border:none; color:#fff; padding:10px 20px; border-radius:15px; font-weight:bold; z-index:300001;">إغلاق X</button>
-        <p style="color:#aaa; font-size:12px; margin-bottom:15px; text-align:center;">عاش يا بطل! اضغط ضغطة مطولة على الصورة عشان تحفظها 🔥</p>
-        <img id="viewer-img" style="max-width:100%; max-height:80%; border-radius:15px; box-shadow:0 0 50px rgba(255,59,48,0.3); -webkit-touch-callout: default !important;">
-        <button onclick="closeFullViewer()" class="btn-full" style="margin-top:20px; max-width:200px;">الرجوع للأبلكيشن</button>
+    <div id="full-screen-viewer" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:9999999; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow:hidden; pointer-events: auto !important;">
+        <button onclick="closeFullViewer()" style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.2); border:none; color:#fff; padding:12px 25px; border-radius:15px; font-weight:bold; z-index:10000000; cursor:pointer;">إغلاق X</button>
+        <p style="color:#fff; font-size:14px; margin-bottom:20px; text-align:center; font-weight:bold; text-shadow: 0 2px 10px #000;">عاش يا بطل! اضغط ضغطة مطولة على الصورة عشان تحفظها 🔥</p>
+        <div style="position:relative; width:100%; display:flex; justify-content:center; align-items:center;">
+            <img id="viewer-img" style="max-width:100%; max-height:75vh; border-radius:15px; box-shadow:0 0 50px rgba(255,59,48,0.5); -webkit-touch-callout: default !important; -webkit-user-select: auto !important; user-select: auto !important; pointer-events: auto !important; display:block; cursor:pointer;">
+        </div>
+        <button onclick="closeFullViewer()" class="btn-full" style="margin-top:25px; max-width:250px; background:rgba(255,255,255,0.1); border:1px solid #444;">الرجوع للأبلكيشن</button>
     </div>
 
 </body>
