@@ -1192,20 +1192,21 @@ async function downloadShareCard() {
 
 function saveBlobAsFile(blob) {
     const url = URL.createObjectURL(blob);
-    
-    // لو إحنا على موبايل، الأضمن نفتح الصورة في صفحة جديدة ونخلي المستخدم يحفظها بلمسة مطولة
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobile) {
         Swal.fire({
             title: 'جاهز للحفظ! 📸',
-            text: 'اضغط ضغطة مطولة على الصورة اللي هتظهر واختار "Save Image"',
-            icon: 'info',
+            html: `
+                <p style="font-size:13px; color:#aaa; margin-bottom:15px;">اضغط ضغطة مطولة على الصورة تحت واختار <b>"Save Image"</b></p>
+                <img src="${url}" style="width:100%; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #333;">
+            `,
             background: '#121212',
             color: '#fff',
-            confirmButtonText: 'فتح الصورة'
-        }).then(() => {
-            window.open(url, '_blank');
+            showConfirmButton: true,
+            confirmButtonText: 'تم ✅',
+            confirmButtonColor: 'var(--primary)',
+            width: '90%'
         });
     } else {
         const link = document.createElement('a');
@@ -1224,5 +1225,5 @@ function saveBlobAsFile(blob) {
         });
     }
     
-    setTimeout(() => URL.revokeObjectURL(url), 10000); // وقت أطول عشان يلحق يحمل
+    setTimeout(() => URL.revokeObjectURL(url), 60000); // وقت كافي جداً للحفظ
 }
