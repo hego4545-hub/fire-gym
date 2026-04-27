@@ -12,24 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // نظام التحديث التلقائي الشامل لضمان وصول آخر التعديلات (v9.4.0)
-        (async function() {
-            const VERSION = 'v9.4.0';
-            if (localStorage.getItem('fire_gym_v') !== VERSION) {
-                // مسح كل شيء حرفياً
-                if ('serviceWorker' in navigator) {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    for (let reg of regs) await reg.unregister();
-                }
-                // مسح الكاش المخزن
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    for (let name of cacheNames) await caches.delete(name);
-                }
-                localStorage.setItem('fire_gym_v', VERSION);
-                window.location.reload(true);
-            }
-        })();
+        // نظام التحديث اليدوي (تم إيقاف التحديث التلقائي لمنع مشاكل الـ WebView)
 
         // إيقاف الـ Service Worker مؤقتاً لحل مشكلة الكاش اللعين
         if ('serviceWorker' in navigator) {
