@@ -14,24 +14,29 @@
     <script>
         // نظام التحديث اليدوي (تم إيقاف التحديث التلقائي لمنع مشاكل الـ WebView)
 
-        // إيقاف الـ Service Worker مؤقتاً لحل مشكلة الكاش اللعين
+        // 🛑 إيقاف وحذف أي Service Worker نهائياً لتنظيف الكاش المتسبب في Error 500
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
+                for(let registration of registrations) { registration.unregister(); }
             });
         }
-        
-        // 🚀 الحل السحري لمنع ظهور شاشة تسجيل الدخول واختفائها (رعشة الشاشة)
+
+        // 🔙 منع زرار الرجوع في الموبايل من تدمير الأبلكيشن
+        history.pushState(null, null, location.href);
+        window.onpopstate = function() {
+            history.pushState(null, null, location.href);
+            // اختياري: ممكن تخليه يقفل المودال لو مفتوح، بس هنا هنخليه يثبت مكانه
+        };
+
+        // 🚀 الحل السحري لمنع رعشة شاشة الدخول
         if (localStorage.getItem('fire_gym_phone')) {
             document.documentElement.classList.add('user-logged-in');
         }
     </script>
     <style>
-        /* إخفاء شاشة التسجيل وإظهار التطبيق فوراً لو اليوزر متسجل (عشان زرار الرجوع) */
-        html.user-logged-in #auth-section { display: none !important; }
-        html.user-logged-in #app-content { display: block !important; }
+        /* قوة إضافية لضمان عدم ظهور شاشة الدخول لو مسجل */
+        html.user-logged-in #auth-section { display: none !important; visibility: hidden !important; opacity: 0 !important; }
+        html.user-logged-in #app-content { display: block !important; visibility: visible !important; opacity: 1 !important; }
 
         :root { 
             --primary: #c62828; 
