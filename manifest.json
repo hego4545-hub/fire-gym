@@ -1,21 +1,21 @@
-// manifest.json
 {
   "name": "Fire Gym Elite",
-  "short_name": "FireGym",
-  "start_url": ".",
+  "short_name": "Fire Gym",
+  "description": "The Ultimate Fitness Management System by Ahmed Hagras",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#ff3d00",
-  "description": "نظام متابعة أبطال كابتن أحمد هيجو 💎",
+  "background_color": "#000000",
+  "theme_color": "#e53935",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
+      "src": "images/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
+      "src": "images/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
