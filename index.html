@@ -22,8 +22,17 @@
                 }
             });
         }
+        
+        // 🚀 الحل السحري لمنع ظهور شاشة تسجيل الدخول واختفائها (رعشة الشاشة)
+        if (localStorage.getItem('fire_gym_phone')) {
+            document.documentElement.classList.add('user-logged-in');
+        }
     </script>
     <style>
+        /* إخفاء شاشة التسجيل وإظهار التطبيق فوراً لو اليوزر متسجل (عشان زرار الرجوع) */
+        html.user-logged-in #auth-section { display: none !important; }
+        html.user-logged-in #app-content { display: block !important; }
+
         :root { 
             --primary: #c62828; 
             --primary-glow: rgba(198, 40, 40, 0.2);
