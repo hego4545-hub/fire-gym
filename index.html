@@ -12,11 +12,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
+        // نظام التحديث التلقائي الشامل لضمان وصول آخر التعديلات (v9.4.0)
+        (async function() {
+            const VERSION = 'v9.4.0';
+            if (localStorage.getItem('fire_gym_v') !== VERSION) {
+                // مسح كل شيء حرفياً
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (let reg of regs) await reg.unregister();
+                }
+                // مسح الكاش المخزن
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (let name of cacheNames) await caches.delete(name);
+                }
+                localStorage.setItem('fire_gym_v', VERSION);
+                window.location.reload(true);
+            }
+        })();
+
+        // إيقاف الـ Service Worker مؤقتاً لحل مشكلة الكاش اللعين
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('SW Registered!', reg);
-                }).catch(err => console.log('SW Error:', err));
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
             });
         }
     </script>
@@ -274,7 +294,7 @@
             -webkit-backdrop-filter: blur(25px);
             display: flex; 
             justify-content: space-around; 
-            padding: 15px 10px 15px; 
+            padding: 15px 5px 15px; 
             border-radius: 30px;
             border: 1px solid rgba(255,255,255,0.1); 
             z-index: 1000; 
@@ -293,6 +313,11 @@
             padding: 20px; 
             overflow-y:auto; 
             backdrop-filter: blur(10px);
+        }
+        
+        /* ضمان ظهور تنبيهات SweetAlert فوق أي مودال */
+        .swal2-container {
+            z-index: 30000 !important;
         }
         
         .history-item { 
@@ -578,7 +603,7 @@
                         🔔<span id="notif-badge" class="hidden" style="position:absolute; top:-5px; right:-5px; background:var(--primary); color:#fff; font-size:10px; padding:2px 5px; border-radius:50%; font-weight:bold; min-width:18px; border:2px solid #000;">0</span>
                     </div>
                     
-                    <div style="display:inline-block; font-size:10px; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); margin-bottom:15px;">V.6.7.2 ELITE 🔥</div>
+                    <div style="display:inline-block; font-size:10px; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); margin-bottom:15px;">V.9.4.0 ELITE 🔥</div>
                     <h2 style="font-size:36px; font-weight:900; letter-spacing:-1.5px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">يا كابتن <span id="user-display-name" style="color:var(--primary);">بطلنا</span> 🔥</h2>
                     
                     <!-- ملاحظة الكابتن بتصميم سنمائي تحت الاسم -->
@@ -588,6 +613,11 @@
                             <span class="pulse-dot" style="width:6px; height:6px; background:var(--accent); border-radius:50%;"></span>
                         </div>
                         <p id="captain-notes-text" style="font-size:16px; font-weight:bold; color:#fff; line-height:1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin:0;"></p>
+                    </div>
+                    <!-- مقولة اليوم التحفيزية -->
+                    <div id="motivation-quote-box" style="margin: 5px auto 15px; max-width: 85%; min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(255,255,255,0.03); border-radius: 15px; padding: 10px 20px; border: 1px solid rgba(255,255,255,0.05); animation: fadeIn 1.5s ease-in-out;">
+                        <span style="font-size: 18px;">🔥</span>
+                        <p id="motivation-text" style="margin: 0; font-size: 13px; color: #aaa; font-style: italic; font-weight: bold; line-height: 1.3;">"الوحوش مش بتعرف المستحيل.. ابدأ تمرينك!"</p>
                     </div>
                 </header>
                 <!-- بنر النظام المخصص (تصغير المستطيل) -->
@@ -603,6 +633,17 @@
                 <div class="card">
                     <h3>سجل نشاطك 🏃‍♂️</h3>
                     <div class="tracker-grid" id="main-tracker-grid"></div>
+                </div>
+
+                <!-- لوحة الأبطال (Leaderboard Mini) -->
+                <div class="card" style="background: linear-gradient(135deg, #1a1a1a, #000); border: 1px solid rgba(255,179,0,0.1); overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="margin:0; font-size:16px;">أبطال الفاير جيم 🏆</h3>
+                        <small style="color:var(--accent); cursor:pointer; font-weight:bold;" onclick="openLeaderboard()">عرض الكل ➔</small>
+                    </div>
+                    <div id="mini-leaderboard" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:5px; scrollbar-width: none;">
+                        <p style="color:#444; font-size:12px; width:100%; text-align:center;">جاري البحث عن الأبطال... 🔍</p>
+                    </div>
                 </div>
 
                 <div class="card" style="background:linear-gradient(135deg,#1e1e1e,#0d47a1); border:none; box-shadow:0 10px 20px rgba(13,71,161,0.3);">
@@ -669,49 +710,87 @@
             </div>
 
             <!-- تبويب تقييمي -->
-            <div id="eval-tab" class="content-tab hidden">
-                <div class="card" style="border-right:5px solid var(--success); padding:25px; background:linear-gradient(135deg, #1e1e1e, #0a1f0a); border-radius:20px; border:1px solid #333; margin-bottom:25px;">
-                    <h2 style="margin-bottom:20px; color:#fff; display:flex; align-items:center; gap:10px; font-size:24px;">📈 رحلة البطل <span id="eval-hero-name" style="color:var(--accent);"></span></h2>
-                    
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px;">
-                        <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:20px; text-align:center; border:1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                            <div style="font-size:11px; color:#777; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">الالتزام العام</div>
-                            <div id="current-score-text" style="font-size:32px; font-weight:900; color:var(--success); text-shadow: 0 0 10px rgba(76,175,80,0.3);">0 / 10</div>
-                        </div>
-                        <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:20px; text-align:center; border:1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                            <div style="font-size:11px; color:#777; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">أحدث وزن</div>
-                            <div id="eval-last-weight" style="font-size:28px; font-weight:900; color:var(--primary); text-shadow: 0 0 10px rgba(229,57,53,0.3);">-- كجم</div>
-                        </div>
-                    </div>
+            <div id="eval-tab" class="content-tab hidden" style="padding-bottom:100px;">
+                
+                <!-- Header -->
+                <div style="text-align:center; padding:30px 0 20px;">
+                    <div style="font-size:11px; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:3px; margin-bottom:8px;">ATHLETE PROGRESS REPORT</div>
+                    <h2 style="font-size:28px; font-weight:900; color:#fff; margin:0;">📈 رحلة البطل <span id="eval-hero-name" style="color:var(--primary);"></span></h2>
+                    <div style="width:60px; height:3px; background:linear-gradient(to left, var(--primary), transparent); margin:12px auto 0; border-radius:10px;"></div>
+                </div>
 
-                    <div style="background:#000; border-radius:25px; padding:20px; border:1px solid #222; margin-bottom:25px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <b style="color:#eee; font-size:14px;">📊 تحليل الأداء والنتائج</b>
-                            <div style="display:flex; gap:10px; font-size:10px;">
-                                <span style="display:flex; align-items:center; gap:4px; color:#ff3b30;">● وزن</span>
-                                <span style="display:flex; align-items:center; gap:4px; color:#4caf50;">● التزام</span>
-                                <span style="display:flex; align-items:center; gap:4px; color:#ffb300;">● دهون</span>
-                            </div>
-                        </div>
-                        <canvas id="evalChart" style="width:100%; height:280px;"></canvas>
+                <!-- Stats Grid -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                    <div style="background:linear-gradient(135deg,rgba(255,59,48,0.1),rgba(0,0,0,0.4)); padding:18px; border-radius:20px; border:1px solid rgba(255,59,48,0.2); text-align:center;">
+                        <div style="font-size:10px; color:#ff3b30; font-weight:bold; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">⚖️ أحدث وزن</div>
+                        <div id="eval-last-weight" style="font-size:30px; font-weight:900; color:#fff;">-- كجم</div>
                     </div>
-
-                    <div style="background:rgba(76,175,80,0.05); border:1px solid rgba(76,175,80,0.2); border-radius:25px; padding:25px; position:relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                        <div style="position:absolute; right:25px; top:-15px; background:var(--success); color:#000; padding:4px 15px; border-radius:12px; font-size:12px; font-weight:900; box-shadow: 0 2px 10px rgba(76,175,80,0.4);">كلام الكوتش ✨</div>
-                        <p id="coach-note-bubble" style="color:#eee; line-height:2; font-style:italic; font-size:16px; text-align:right;"></p>
+                    <div style="background:linear-gradient(135deg,rgba(76,175,80,0.1),rgba(0,0,0,0.4)); padding:18px; border-radius:20px; border:1px solid rgba(76,175,80,0.2); text-align:center;">
+                        <div style="font-size:10px; color:#4caf50; font-weight:bold; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">✅ الالتزام</div>
+                        <div id="current-score-text" style="font-size:30px; font-weight:900; color:#fff;">-- / 10</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,rgba(255,179,0,0.1),rgba(0,0,0,0.4)); padding:18px; border-radius:20px; border:1px solid rgba(255,179,0,0.2); text-align:center;">
+                        <div style="font-size:10px; color:#ffb300; font-weight:bold; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">🔥 نسبة الدهون</div>
+                        <div id="eval-last-fat" style="font-size:30px; font-weight:900; color:#fff;">-- %</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,rgba(0,122,255,0.1),rgba(0,0,0,0.4)); padding:18px; border-radius:20px; border:1px solid rgba(0,122,255,0.2); text-align:center;">
+                        <div style="font-size:10px; color:#007aff; font-weight:bold; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">📋 جلسات مسجلة</div>
+                        <div id="eval-total-count" style="font-size:30px; font-weight:900; color:#fff;">--</div>
                     </div>
                 </div>
 
-                <h4 style="margin:40px 0 20px; color:#555; text-align:center; display:flex; align-items:center; gap:15px; font-size:14px;">
-                    <span style="flex:1; height:1px; background:#222;"></span> 📋 التاريخ الأسبوعي للتقييم <span style="flex:1; height:1px; background:#222;"></span>
-                </h4>
-                <div id="eval-history-list" style="padding-bottom:100px;"></div>
+                <!-- Chart -->
+                <div style="background:#0a0a0a; border-radius:24px; padding:20px; border:1px solid #1a1a1a; margin-bottom:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <b style="color:#fff; font-size:14px; font-weight:900;">📊 منحنى التطور</b>
+                        <div style="display:flex; gap:12px; font-size:10px; font-weight:bold;">
+                            <span style="display:flex; align-items:center; gap:5px; color:#ff3b30;"><span style="width:20px; height:3px; background:#ff3b30; border-radius:2px; display:inline-block;"></span>وزن</span>
+                            <span style="display:flex; align-items:center; gap:5px; color:#ffb300;"><span style="width:20px; height:3px; background:#ffb300; border-radius:2px; border-top:2px dashed #ffb300; display:inline-block;"></span>دهون</span>
+                            <span style="display:flex; align-items:center; gap:5px; color:#4caf50;"><span style="width:20px; height:3px; background:#4caf50; border-radius:2px; display:inline-block;"></span>التزام</span>
+                        </div>
+                    </div>
+                    <div style="position:relative; height:220px;">
+                        <canvas id="evalChart"></canvas>
+                    </div>
+                    <p id="eval-no-data-msg" style="display:none; text-align:center; color:#333; font-size:13px; padding:60px 20px;">مفيش تقييمات لسه 🔥<br><small>انتظر أول تقييم من الكابتن</small></p>
+                </div>
+
+                <!-- Coach Message -->
+                <div style="position:relative; background:linear-gradient(135deg, rgba(76,175,80,0.08), rgba(0,0,0,0.5)); border:1px solid rgba(76,175,80,0.15); border-radius:24px; padding:25px 20px 20px; margin-bottom:25px;">
+                    <div style="position:absolute; top:-14px; right:20px; background:linear-gradient(135deg,#2e7d32,#4caf50); color:#fff; padding:5px 18px; border-radius:20px; font-size:12px; font-weight:900; letter-spacing:1px; box-shadow:0 4px 12px rgba(76,175,80,0.4);">✨ كلام الكوتش</div>
+                    <p id="coach-note-bubble" style="color:#ddd; line-height:1.9; font-size:15px; text-align:right; font-style:italic; margin:5px 0 0;">في انتظار أول تقييم من الكابتن... 🔥</p>
+                </div>
+
+                <!-- History -->
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <span style="flex:1; height:1px; background:linear-gradient(to right, #111, #333);"></span>
+                    <span style="color:#444; font-size:12px; font-weight:bold; letter-spacing:1px;">📋 التاريخ الكامل</span>
+                    <span style="flex:1; height:1px; background:linear-gradient(to left, #111, #333);"></span>
+                </div>
+                <div id="eval-history-list"></div>
             </div>
 
             <!-- 2. تبويب السجل -->
             <div id="history-tab" class="content-tab hidden">
+                <div class="card" style="background:linear-gradient(135deg, #2e7d32, #1b5e20); border:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h3 style="margin:0; color:#fff;">حاسبة السعرات الذكية 🍎</h3>
+                            <p style="margin:5px 0 0; font-size:11px; color:rgba(255,255,255,0.7);">احسب احتياج جسمك من البروتين والكربوهيدرات</p>
+                        </div>
+                        <button onclick="openMacroCalculator()" style="background:#fff; color:#1b5e20; border:none; padding:10px 20px; border-radius:12px; font-weight:bold; cursor:pointer;">ابدأ الآن</button>
+                    </div>
+                </div>
+
+                <div class="card" style="background:rgba(255,179,0,0.05); border:1px solid rgba(255,179,0,0.1);">
+                    <h3 style="color:var(--accent); margin-bottom:15px; font-size:16px;">أوسمة الإنجاز 🏅</h3>
+                    <div id="user-badges" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
+                        <p style="color:#555; font-size:11px;">كمل تمارينك عشان تفتح أوسمة جديدة! 🔥</p>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <h3 style="margin-bottom:15px;">تاريخ الأبطال 📜</h3>
+                    <h3 style="margin-bottom:20px;">إعدادات الحساب ⚙️</h3>
                     <div id="user-history-list"></div>
                 </div>
             </div>
@@ -829,6 +908,20 @@
                     <div id="all-users-list"></div>
                 </div>
             </div>
+            
+            <!-- تبويب مركز الدردشة للأدمن -->
+            <div id="admin-chat-tab" class="content-tab hidden">
+                <div class="card" style="margin-bottom:20px; background:linear-gradient(135deg, #111, #0a0a0a); border:1px solid #333; padding:25px;">
+                    <h2 style="color:var(--accent); margin:0 0 10px 0; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:24px;">💬</span> مركز الرسائل
+                    </h2>
+                    <p style="color:#777; font-size:12px; margin:0;">تابع أحدث محادثات الأبطال ورد عليهم فوراً</p>
+                </div>
+                
+                <div id="admin-chat-list" style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Chat items will appear here -->
+                </div>
+            </div>
 
             <!-- تبويب التكنيك الجديد -->
             <div id="technique-tab" class="content-tab hidden">
@@ -857,7 +950,7 @@
                         </button>
                     </div>
 
-                    <p style="margin-top:30px; font-size:11px; color:#555;">Fire Gym PWA V.6.5.0 - Original Pro</p>
+                    <p style="margin-top:30px; font-size:11px; color:#555;">Fire Gym PWA V.9.4.0 - Official Pro</p>
                 </div>
             </div>
         </div>
@@ -865,6 +958,10 @@
         <div class="bottom-tabs hidden" id="bottom-nav-bar">
             <a href="javascript:void(0)" id="home-tab-nav" class="tab active" onclick="switchTab('user', this)"><span>🏋️‍♂️</span>الرئيسية</a>
             <a href="javascript:void(0)" class="tab" onclick="switchTab('technique', this)"><span>🎥</span>التكنيك</a>
+            <a href="javascript:void(0)" id="chat-tab-nav" class="tab" onclick="handleChatTabClick()" style="position:relative;">
+                <span>💬</span>الشات
+                <span id="chat-badge" class="hidden" style="position:absolute; top:5px; right:15px; width:10px; height:10px; background:var(--primary); border-radius:50%; border:2px solid #000; box-shadow: 0 0 10px rgba(255,0,0,0.5);"></span>
+            </a>
             <a href="javascript:void(0)" id="history-tab-nav" class="tab" onclick="switchTab('history', this)"><span>📝</span>السجل</a>
             <a href="javascript:void(0)" class="tab" id="more-nav" onclick="toggleMoreMenu()"><span>🎒</span>المزيد</a>
             <a href="javascript:void(0)" id="admin-nav" class="tab hidden" onclick="switchTab('admin', this)"><span>👑</span>الأدمن</a>
@@ -930,7 +1027,7 @@
                 <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
 
                 <div style="text-align:center; padding:10px;">
-                    <p style="font-size:10px; color:#999; margin:0;">Fire Gym Elite V.7.1.3</p>
+                    <p style="font-size:10px; color:#999; margin:0;">Fire Gym Elite V.9.4.0</p>
                 </div>
             </div>
         </div>
@@ -1048,9 +1145,15 @@
                     <input type="range" id="admin-eval-score" min="1" max="10" value="8" style="width:100%; accent-color:var(--success);" oninput="document.getElementById('score-val-display').innerText = this.value + ' / 10'">
                 </div>
 
-                <div style="margin-bottom:15px;">
-                    <label style="display:block; color:#777; font-size:12px; margin-bottom:8px;">نسبة الدهون الحالية (%)</label>
-                    <input type="number" id="admin-eval-fat" placeholder="مثلاً: 18.5" style="width:100%; background:#000; border:1px solid #333; color:var(--accent); padding:12px; border-radius:12px; font-weight:bold;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <div>
+                        <label style="display:block; color:#777; font-size:12px; margin-bottom:8px;">الوزن الحالي (كجم)</label>
+                        <input type="number" id="admin-eval-weight" placeholder="0.0" style="width:100%; background:#000; border:1px solid #333; color:var(--primary); padding:12px; border-radius:12px; font-weight:bold;">
+                    </div>
+                    <div>
+                        <label style="display:block; color:#777; font-size:12px; margin-bottom:8px;">الدهون الحالية (%)</label>
+                        <input type="number" id="admin-eval-fat" placeholder="0.0" style="width:100%; background:#000; border:1px solid #333; color:var(--accent); padding:12px; border-radius:12px; font-weight:bold;">
+                    </div>
                 </div>
 
                 <div style="margin-bottom:15px;">
@@ -1141,21 +1244,39 @@
         </div>
     </div>
 
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="modal hidden" style="z-index: 10015;">
+        <div class="card" style="width:100%; max-width:500px; height:80vh; padding:0; display:flex; flex-direction:column; background:#0a0a0a; border:1px solid #333; overflow:hidden;">
+            <div style="padding:20px; background:#111; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="chat-title" style="color:var(--accent); margin:0; font-size:18px;">💬 الدردشة مع الكابتن</h3>
+                <button onclick="closeChat()" style="background:#222; border:none; color:#fff; width:35px; height:35px; border-radius:50%;">✕</button>
+            </div>
+            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                <!-- الرسائل هتظهر هنا -->
+            </div>
+            <div style="padding:15px; background:#111; border-top:1px solid #222; display:flex; gap:10px;">
+                <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:12px; border-radius:15px;">
+                <button onclick="sendMessage()" style="background:var(--primary); color:#fff; border:none; width:50px; height:50px; border-radius:15px; font-size:20px; cursor:pointer;">✈️</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Exercise Editor Modal (Sub-page) -->
     <div id="ex-editor-modal" class="modal hidden" style="z-index: 10010;">
-        <div class="card" style="width:95%; max-width:500px; padding:25px; background:#0a0a0a; border:1px solid #333; max-height:90vh; overflow-y:auto; border-radius:30px; box-shadow: 0 0 50px rgba(0,0,0,1);">
+        <div class="card" style="width:95%; max-width:500px; padding:25px 15px; background:#0a0a0a; border:1px solid #333; max-height:90vh; overflow-y:auto; border-radius:30px; box-shadow: 0 0 50px rgba(0,0,0,1);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 id="ex-editor-name" style="color:var(--accent); margin:0; font-size:20px;">اسم التمرين</h2>
-                <button onclick="document.getElementById('ex-editor-modal').classList.add('hidden'); viewCatPlan(lastViewedCat);" style="background:#222; border:none; color:#fff; width:35px; height:35px; border-radius:50%;">✕</button>
+                <button onclick="document.getElementById('ex-editor-modal').classList.add('hidden'); viewCatPlan(lastViewedCat, true);" style="background:#222; border:none; color:#fff; width:35px; height:35px; border-radius:50%;">✕</button>
             </div>
             
             <div style="background:rgba(255,179,0,0.05); padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid rgba(255,179,0,0.1);">
                 <p style="font-size:12px; color:#777; margin:0;">الهدف: <b id="ex-editor-sets" style="color:var(--accent);">4</b> مجموعات</p>
+                <div id="ex-editor-note-box"></div>
             </div>
 
             <div id="ex-editor-sets-container" style="overflow-x:auto;"></div>
 
-            <button id="ex-editor-close-btn" onclick="document.getElementById('ex-editor-modal').classList.add('hidden'); viewCatPlan(lastViewedCat);" class="btn-full" style="background:var(--primary); margin-top:30px;">تم التعديل ✅</button>
+            <button id="ex-editor-close-btn" onclick="saveExEdit()" class="btn-full" style="background:var(--primary); margin-top:30px;">تم التعديل ✅</button>
         </div>
     </div>
 
@@ -1244,7 +1365,115 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="scripts_bundle.js?v=7.2.2"></script>
+    <!-- مودال لوحة الصدارة الكاملة -->
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:450px; background:linear-gradient(180deg, #1a1a1a, #070707); border:1px solid #333; padding:0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, var(--primary), var(--primaryDark)); padding:25px; text-align:center; position:relative;">
+                <span class="close" onclick="document.getElementById('leaderboard-modal').classList.add('hidden')" style="position:absolute; top:15px; right:20px; color:#fff;">&times;</span>
+                <h2 style="margin:0; color:#fff; font-size:24px;">لوحة الشرف 🏆</h2>
+                <p style="margin:5px 0 0; color:rgba(255,255,255,0.7); font-size:12px;">أقوى أبطال Fire Gym التزاماً هذا الشهر</p>
+            </div>
+            <div id="full-leaderboard-list" style="padding:20px; max-height:450px; overflow-y:auto;">
+                <!-- قائمة الأبطال هنا -->
+            </div>
+            <div style="padding:15px; border-top:1px solid #222; text-align:center;">
+                <p style="font-size:11px; color:#555; margin:0;">يتم تحديث الترتيب بناءً على تقييمات الكابتن ⚡</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال حاسبة السعرات والماكروز -->
+    <div id="macro-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:500px; background:#121212; padding:0; overflow:hidden; border-radius:30px;">
+            <div style="background:#2e7d32; padding:30px; text-align:center; position:relative;">
+                <span class="close" onclick="document.getElementById('macro-modal').classList.add('hidden')" style="position:absolute; top:15px; right:20px; color:#fff;">&times;</span>
+                <h2 style="margin:0; color:#fff;">حاسبة السعرات والماكروز 🍎</h2>
+                <p style="margin:5px 0 0; color:rgba(255,255,255,0.8); font-size:12px;">بناءً على معادلة Mifflin-St Jeor العالمية</p>
+            </div>
+            
+            <div style="padding:25px;" id="macro-form">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+                    <div>
+                        <label style="display:block; color:#777; font-size:12px; margin-bottom:5px;">العمر</label>
+                        <input type="number" id="macro-age" placeholder="مثلاً: 25" style="width:100%; background:#1a1a1a; border:1px solid #333; color:#fff; padding:12px; border-radius:12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; color:#777; font-size:12px; margin-bottom:5px;">النوع</label>
+                        <select id="macro-gender" style="width:100%; background:#1a1a1a; border:1px solid #333; color:#fff; padding:12px; border-radius:12px;">
+                            <option value="male">ذكر 👨</option>
+                            <option value="female">أنثى 👩</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; color:#777; font-size:12px; margin-bottom:5px;">مستوى النشاط البدني</label>
+                    <select id="macro-activity" style="width:100%; background:#1a1a1a; border:1px solid #333; color:#fff; padding:12px; border-radius:12px;">
+                        <option value="1.2">خامل (بدون تمرين)</option>
+                        <option value="1.375">نشاط خفيف (1-3 أيام)</option>
+                        <option value="1.55">نشاط متوسط (3-5 أيام)</option>
+                        <option value="1.725">نشاط عالي (6-7 أيام)</option>
+                        <option value="1.9">نشاط فائق (رياضي محترف)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:25px;">
+                    <label style="display:block; color:#777; font-size:12px; margin-bottom:5px;">هدفك الحالي</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                        <button class="macro-goal-btn active" onclick="setMacroGoal('cut', this)" style="background:#2e7d32; color:#fff; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:bold;">تنشيف 🔥</button>
+                        <button class="macro-goal-btn" onclick="setMacroGoal('maintain', this)" style="background:#222; color:#777; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:bold;">ثبات ⚖️</button>
+                        <button class="macro-goal-btn" onclick="setMacroGoal('bulk', this)" style="background:#222; color:#777; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:bold;">تضخيم 💪</button>
+                    </div>
+                </div>
+
+                <button onclick="calculateMacros()" class="btn-full" style="background:#2e7d32; color:#fff; font-weight:bold; font-size:18px; padding:15px; border-radius:15px; box-shadow: 0 10px 20px rgba(46,125,50,0.3);">احسب احتياجي الآن 🚀</button>
+            </div>
+
+            <div id="macro-result" class="hidden" style="padding:25px; background:linear-gradient(180deg, #121212, #000);">
+                <div style="text-align:center; margin-bottom:25px;">
+                    <small style="color:#777; display:block; margin-bottom:5px;">احتياجك اليومي من السعرات</small>
+                    <b id="result-calories" style="font-size:42px; color:#4caf50; display:block; line-height:1;">2400</b>
+                    <small style="color:#4caf50;">سعرة حرارية</small>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:25px;">
+                    <div style="background:#1a1a1a; padding:15px; border-radius:15px; text-align:center; border-top:3px solid #e53935;">
+                        <small style="color:#777; font-size:10px; display:block;">بروتين</small>
+                        <b id="result-protein" style="color:#fff; font-size:18px;">150g</b>
+                    </div>
+                    <div style="background:#1a1a1a; padding:15px; border-radius:15px; text-align:center; border-top:3px solid #2196f3;">
+                        <small style="color:#777; font-size:10px; display:block;">كربوهيدرات</small>
+                        <b id="result-carbs" style="color:#fff; font-size:18px;">250g</b>
+                    </div>
+                    <div style="background:#1a1a1a; padding:15px; border-radius:15px; text-align:center; border-top:3px solid #ffb300;">
+                        <small style="color:#777; font-size:10px; display:block;">دهون</small>
+                        <b id="result-fats" style="color:#fff; font-size:18px;">60g</b>
+                    </div>
+                </div>
+
+                <button onclick="document.getElementById('macro-result').classList.add('hidden'); document.getElementById('macro-form').classList.remove('hidden');" 
+                        style="width:100%; background:none; border:1px solid #333; color:#555; padding:10px; border-radius:10px; font-size:12px;">إعادة الحساب 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال مشغل فيديوهات التمارين (النسخة التجريبية) -->
+    <div id="exercise-video-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:400px; background:#000; padding:0; border-radius:25px; overflow:hidden; border:1px solid #333;">
+            <div style="padding:15px; background:#111; display:flex; justify-content:space-between; align-items:center;">
+                <b id="video-title" style="color:#fff; font-size:14px;">شرح التمرين 🎬</b>
+                <span class="close" onclick="closeExerciseVideo()" style="color:#fff; font-size:24px;">&times;</span>
+            </div>
+            <div id="video-container" style="width:100%; aspect-ratio:9/16; background:#000;">
+                <!-- الفيديو سيظهر هنا -->
+            </div>
+            <div style="padding:15px; text-align:center; background:#111;">
+                <p style="color:#777; font-size:11px; margin:0;">هذا الفيديو تعليمي لمساعدتك على الأداء الصحيح 🔥</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="fire_bundle_v94.js"></script>
 
     <div id="full-screen-viewer" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:9999999; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow:hidden;">
         <button onclick="closeFullViewer()" style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.2); border:none; color:#fff; padding:12px 25px; border-radius:15px; font-weight:bold; z-index:10000000;">إغلاق X</button>
