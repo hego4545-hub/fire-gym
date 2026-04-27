@@ -1,13 +1,11 @@
-// firegym_auth.js
-// Fire Gym Elite - Auth & Security Logic v10.1 (Legacy Optimized)
-
+// Fire Gym Elite - Auth & Security Logic v1.0
 async function fireGymChangePass() {
     if (typeof Swal === 'undefined') return alert("مكتبة التنبيهات لا تعمل، برجاء تحديث الصفحة 🔄");
     
-    var p = localStorage.getItem('fire_gym_phone');
+    const p = localStorage.getItem('fire_gym_phone');
     if (!p) return Swal.fire('خطأ', 'برجاء تسجيل الدخول أولاً يا وحش', 'error');
 
-    var result = await Swal.fire({
+    const { value: pass } = await Swal.fire({
         title: 'تغيير كلمة السر 🔥',
         input: 'password',
         inputLabel: 'ادخل كلمة السر الجديدة:',
@@ -20,29 +18,28 @@ async function fireGymChangePass() {
         cancelButtonText: 'إلغاء'
     });
 
-    var pass = result.value;
-
     if (pass) {
         if (pass.length < 4) return Swal.fire('خطأ', 'الباسورد لازم يكون 4 أرقام أو حروف على الأقل', 'error');
-        Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+        Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
         try {
-            await firebase.firestore().collection('users').doc(p).set({ password: pass }, { merge: true });
+            await db.collection('users').doc(p).set({ password: pass }, { merge: true });
             Swal.fire({ title: 'عاش يا بطل! 🔥', text: 'تم تحديث كلمة السر بنجاح، متنسهاش بقى!', icon: 'success', background: '#1e1e1e', color: '#fff' });
-        } catch(e) {
+        } catch (e) {
             Swal.fire('عذراً', 'فشل الحفظ: ' + e.message, 'error');
         }
     }
 }
 
 async function requestGoalChange() {
-    var p = localStorage.getItem('fire_gym_phone');
+    const p = localStorage.getItem('fire_gym_phone');
     if (!p) return Swal.fire('عذراً', 'برجاء تسجيل الدخول أولاً', 'error');
 
-    var s = await firebase.firestore().collection('users').doc(p).get();
+    const s = await db.collection('users').doc(p).get();
     if (!s.exists) return Swal.fire('خطأ', 'بيانات المستخدم غير موجودة', 'error');
-    var u = s.data();
+    const u = s.data();
 
-    var result = await Swal.fire({
+    const { value: goal } = await Swal.fire({
         title: 'طلب تغيير نظامك 🔥',
         input: 'select',
         inputOptions: {
@@ -58,60 +55,59 @@ async function requestGoalChange() {
         color: '#fff'
     });
 
-    var goal = result.value;
-
     if (goal) {
         if (goal === u.goal) return Swal.fire('ملاحظة', 'أنت مسجل بالفعل في هذا النظام يا بطل!', 'info');
 
-        Swal.fire({ title: 'جاري الإرسال...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
-        try {
-            await firebase.firestore().collection('users').doc(p).update({
-                pendingGoal: goal
-            });
-            Swal.fire({
-                title: 'تم الإرسال بنجاح! 🚀',
-                text: 'طلبك وصل للكابتن وهيتم مراجعته فوراً، انتظر التغيير يا وحش!',
-                icon: 'success',
-                background: '#1e1e1e',
-                color: '#fff'
-            });
-        } catch (e) {
-            Swal.fire('خطأ', 'فشل إرسال الطلب: ' + e.message, 'error');
-        }
+        Swal.fire({ title: 'جاري الإرسال...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        await db.collection('users').doc(p).update({
+            pendingGoal: goal
+        });
+
+        Swal.fire({
+            title: 'تم الإرسال بنجاح! 🚀',
+            text: 'طلبك وصل للكابتن وهيتم مراجعته فوراً، انتظر التغيير يا وحش!',
+            icon: 'success',
+            background: '#1e1e1e',
+            color: '#fff'
+        });
     }
 }
 
 async function approveGoalChange(id, newGoal) {
-    Swal.fire({ title: 'جاري التنفيذ...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
-    try {
-        await firebase.firestore().collection('users').doc(id).update({
-            goal: newGoal,
-            pendingGoal: null
-        });
-        Swal.fire({
-            title: 'تمت الموافقة! ✅',
-            text: 'نظام البطل اتغير رسمياً ومسحنا الطلب المعلق.',
-            icon: 'success',
-            timer: 1500,
-            background: '#1e1e1e',
-            color: '#fff'
-        });
-        if (typeof sendNotificationTo === 'function') sendNotificationTo(id, "تحديث من الكابتن 🔥", "الكابتن وافق على تغيير نظامك إلى: " + newGoal);
-        if (typeof loadAdmin === 'function') loadAdmin();
-    } catch (e) {
-        Swal.fire('خطأ', 'فشل التنفيذ: ' + e.message, 'error');
-    }
+    Swal.fire({ title: 'جاري التنفيذ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    await db.collection('users').doc(id).update({
+        goal: newGoal,
+        pendingGoal: null
+    });
+    Swal.fire({
+        title: 'تمت الموافقة! ✅',
+        text: 'نظام البطل اتغير رسمياً ومسحنا الطلب المعلق.',
+        icon: 'success',
+        timer: 1500,
+        background: '#1e1e1e',
+        color: '#fff'
+    });
+    if (typeof sendNotificationTo === 'function') sendNotificationTo(id, "تحديث من الكابتن 🔥", `الكابتن وافق على تغيير نظامك إلى: ${newGoal}`);
+    if (typeof loadAdmin === 'function') loadAdmin();
 }
 
 async function rejectGoalChange(id) {
-    if (!confirm('هل أنت متأكد من رفض طلب هذا البطل؟')) return;
-    try {
-        await firebase.firestore().collection('users').doc(id).update({
-            pendingGoal: null
-        });
-        Swal.fire('تم الرفض ❌', 'تم مسح طلب التغيير وإبقاء البطل على نظامه الحالي.', 'info');
-        if (typeof loadAdmin === 'function') loadAdmin();
-    } catch (e) {
-        Swal.fire('خطأ', 'فشل الإجراء: ' + e.message, 'error');
-    }
+    const result = await Swal.fire({
+        title: 'رفض الطلب؟ ❌',
+        text: "هل أنت متأكد من رفض طلب هذا البطل؟",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ff3b30',
+        cancelButtonColor: '#333',
+        confirmButtonText: 'نعم، رفض',
+        cancelButtonText: 'إلغاء',
+        background: '#121212',
+        color: '#fff'
+    });
+    if (!result.isConfirmed) return;
+    await db.collection('users').doc(id).update({
+        pendingGoal: null
+    });
+    Swal.fire('تم الرفض ❌', 'تم مسح طلب التغيير وإبقاء البطل على نظامه الحالي.', 'info');
+    if (typeof loadAdmin === 'function') loadAdmin();
 }
