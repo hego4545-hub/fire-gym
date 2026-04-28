@@ -318,11 +318,8 @@ function viewCatPlan(cat, force = false) {
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                         <span style="font-size:18px;">🏋️</span>
                         <h4 style="margin:0; font-size:16px; color:#fff; font-weight:600; letter-spacing:0.5px;">${ex.name}</h4>
-                        ${(ex.videoUrl || getSmartVideo(ex.name) || cat === 'بنج') ? 
-                            `<span onclick="event.stopPropagation(); openExerciseVideo('${ex.name}', '${ex.videoUrl || getSmartVideo(ex.name) || 'https://www.w3schools.com/html/mov_bbb.mp4'}')" 
-                                   style="cursor:pointer; background:var(--primary); color:#fff; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:900; border:none; box-shadow: 0 4px 10px rgba(229,57,53,0.4); margin-right:10px; display:inline-flex; align-items:center; gap:5px;">
-                                   🎬 شرح
-                             </span>` : ''}
+                        <!-- زر الفيديو تم حذفه مؤقتاً لزيادة الاستقرار -->
+
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <p style="margin:0; font-size:11px; color:#777; background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">🎯 ${ex.sets || '4'} مجموعات</p>
@@ -2908,66 +2905,5 @@ setTimeout(() => {
 }, 2000);
 
 // --- END OF PAMPERING ---
-// --- EXERCISE VIDEO LIBRARY LOGIC ---
+// --- تم إزالة أكواد الفيديو مؤقتاً ---
 
-function openExerciseVideo(title, url) {
-    const modal = document.getElementById('exercise-video-modal');
-    const titleEl = document.getElementById('video-title');
-    const container = document.getElementById('video-container');
-    
-    if(!modal || !container) return;
-
-    titleEl.innerText = title + " 🎬";
-    
-    // التحقق إذا كان الرابط فيديو مباشر (MP4) أو يوتيوب
-    if(url.endsWith('.mp4')) {
-        container.innerHTML = `<video width="100%" height="100%" controls autoplay style="object-fit:cover;">
-            <source src="${url}" type="video/mp4">
-            متصفحك لا يدعم تشغيل الفيديو.
-        </video>`;
-    } else {
-        // تحويل روابط يوتيوب العادية لروابط Embed لتعمل داخل التطبيق
-        let embedUrl = url;
-        if(url.includes('youtube.com/watch?v=')) {
-            embedUrl = url.replace('watch?v=', 'embed/');
-        } else if(url.includes('youtu.be/')) {
-            embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
-        }
-        container.innerHTML = `<iframe width="100%" height="100%" src="${embedUrl}?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-    }
-    
-    modal.classList.remove('hidden');
-}
-
-function closeExerciseVideo() {
-    const modal = document.getElementById('exercise-video-modal');
-    const container = document.getElementById('video-container');
-    if(container) container.innerHTML = ""; // إيقاف الفيديو
-    if(modal) modal.classList.add('hidden');
-}
-
-// --- END OF VIDEO LIBRARY ---
-
-// --- SMART EXERCISE VIDEO MAPPING ---
-const SMART_EX_VIDEOS = {
-    'بنج': 'https://www.youtube.com/embed/rT7Dg0nne2E',
-    'فراشة': 'https://www.youtube.com/embed/Z57CtZtp0_w',
-    'تجميع': 'https://www.youtube.com/embed/vthMCtgVtFw',
-    'بار': 'https://www.youtube.com/embed/rT7Dg0nne2E',
-    'سكوات': 'https://www.youtube.com/embed/gcNh17Ckjgg',
-    'رجل': 'https://www.youtube.com/embed/gcNh17Ckjgg',
-    'بطن': 'https://www.youtube.com/embed/2pLT-olgUJs',
-    'ظهر': 'https://www.youtube.com/embed/mG6y606idHM',
-    'كتف': 'https://www.youtube.com/embed/HisaWv7f8S4',
-    'باي': 'https://www.youtube.com/embed/ykJgrvx_ZAs',
-    'تراي': 'https://www.youtube.com/embed/3vC6z08bW7o'
-};
-
-function getSmartVideo(name) {
-    if(!name) return null;
-    for (let key in SMART_EX_VIDEOS) {
-        if (name.includes(key)) return SMART_EX_VIDEOS[key];
-    }
-    return null;
-}
-// --- END OF SMART MAPPING ---
